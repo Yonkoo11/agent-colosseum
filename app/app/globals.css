@@ -901,6 +901,15 @@ body::after {
   100% { opacity: 1; }
 }
 
+/* Inline PnL next to portfolio value */
+.leader-first__pnl-inline,
+.leader-card__pnl-inline {
+  display: inline-block;
+  margin-left: var(--sp-3);
+  font-size: 14px;
+  font-weight: 500;
+}
+
 /* ==============================
    Responsive
    ============================== */

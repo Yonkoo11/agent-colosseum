@@ -3,10 +3,11 @@
 import React, { useEffect, useRef, useState } from "react"
 import { fetchPoolData, PoolData, POOL_ID, AMM_PACKAGE, fetchAgents, AgentData, TOKEN_SCALE } from "./chain"
 
-const STATIC_AGENTS = [
-  { name: "MeanRevBot", strategy: "Mean Reversion", pnl: 8.97, trades: 5, wins: 3 },
-  { name: "MMBot", strategy: "Market Maker", pnl: 8.39, trades: 0, wins: 1 },
-  { name: "MomentumBot", strategy: "Momentum", pnl: 6.09, trades: 4, wins: 2 },
+// Placeholder agent names shown while chain data loads
+const PLACEHOLDER_AGENTS = [
+  { name: "MomentumBot", strategy: "Momentum" },
+  { name: "MeanRevBot", strategy: "Mean Reversion" },
+  { name: "MMBot", strategy: "Market Maker" },
 ]
 
 const BUGS = [
@@ -152,30 +153,34 @@ export default function Home() {
     return () => observerRef.current?.disconnect()
   }, [])
 
-  // Use live data only if majority of agents have trades
-  const liveHasActivity = liveAgents.filter((a) => a.trades > 0).length >= 2
-  const useLive = agentsLive && liveHasActivity
+  // Use chain data whenever available; show placeholders only while loading
   const poolPrice = pool?.price || 1
 
-  const agents = useLive
+  const agents = agentsLive
     ? liveAgents
         .map((a) => {
-          // Compute portfolio value in Y-terms using live pool price
           const portfolioRaw = a.balance_x * poolPrice + a.balance_y
-          const pnlPct = a.initial_value > 0
-            ? ((portfolioRaw - a.initial_value) / a.initial_value) * 100
-            : 0
+          // Use on-chain cumulative_pnl (raw delta from 1e18 offset).
+          // Convert to percentage: pnl / initial_value * 100.
+          // If initial_value is too small (placeholder from registration), fall back
+          // to showing the raw pnl delta scaled by TOKEN_SCALE.
+          const pnlPct = a.initial_value > TOKEN_SCALE
+            ? (a.pnl / a.initial_value) * 100
+            : a.pnl / TOKEN_SCALE // raw pnl in token units, not percentage
           return {
             name: a.name,
             strategy: a.strategy,
             pnl: pnlPct,
+            pnlIsRaw: a.initial_value <= TOKEN_SCALE,
             portfolioValue: portfolioRaw,
             trades: a.trades,
             wins: a.wins,
           }
         })
         .sort((a, b) => b.portfolioValue - a.portfolioValue)
-    : STATIC_AGENTS.map((a) => ({ ...a, portfolioValue: 0 }))
+    : PLACEHOLDER_AGENTS.map((a) => ({ ...a, pnl: 0, pnlIsRaw: false, portfolioValue: 0, trades: 0, wins: 0 }))
+
+  const hasAnyTrades = agents.some((a) => a.trades > 0)
 
   const allWinsZero = agents.every((a) => a.wins === 0)
   const first = agents[0]
@@ -325,10 +330,10 @@ export default function Home() {
           <div className="section-marker">
             <span className="section-marker__bar" />
             <span className="section-marker__text">Leaderboard</span>
-            {useLive ? (
+            {agentsLive ? (
               <><span className="pulse-dot" aria-label="Live data" /><span className="pulse-label">Live</span></>
             ) : (
-              <span className="pulse-label">Demo</span>
+              <span className="pulse-label">Loading</span>
             )}
             {lastUpdated && (
               <span className="section-marker__timestamp">
@@ -343,18 +348,23 @@ export default function Home() {
               <h3 className="leader-first__name">{first.name}</h3>
               <span className="leader-first__strategy-tag">{first.strategy}</span>
             </div>
-            {useLive && first.trades > 0 ? (
+            {first.trades > 0 ? (
               <div className="leader-first__value tabular">
                 {formatPortfolio(first.portfolioValue)}
                 <span className="leader-first__value-label">portfolio</span>
+                <span className={`leader-first__pnl-inline ${pnlClass(first.pnl)}`}>
+                  {first.pnlIsRaw
+                    ? `${pnlPrefix(first.pnl)}${first.pnl.toFixed(2)} tokens`
+                    : `${pnlPrefix(first.pnl)}${first.pnl.toFixed(2)}%`}
+                </span>
               </div>
-            ) : useLive && first.trades === 0 ? (
+            ) : agentsLive ? (
               <div className="leader-first__pnl" style={{ color: "var(--text-tertiary)" }}>
-                No trades yet
+                Registered &middot; awaiting first trade
               </div>
             ) : (
-              <div className={`leader-first__pnl ${pnlClass(first.pnl)}`}>
-                {pnlPrefix(first.pnl)}{first.pnl.toFixed(2)}%
+              <div className="leader-first__pnl" style={{ color: "var(--text-tertiary)" }}>
+                &mdash;
               </div>
             )}
             <p className="leader-first__meta">
@@ -371,17 +381,22 @@ export default function Home() {
                   <h3 className="leader-card__name">{agent.name}</h3>
                   <span className="leader-card__strategy-tag">{agent.strategy}</span>
                 </div>
-                {useLive && agent.trades > 0 ? (
+                {agent.trades > 0 ? (
                   <div className="leader-card__value tabular">
                     {formatPortfolio(agent.portfolioValue)}
+                    <span className={`leader-card__pnl-inline ${pnlClass(agent.pnl)}`}>
+                      {agent.pnlIsRaw
+                        ? `${pnlPrefix(agent.pnl)}${agent.pnl.toFixed(2)} tokens`
+                        : `${pnlPrefix(agent.pnl)}${agent.pnl.toFixed(2)}%`}
+                    </span>
                   </div>
-                ) : useLive && agent.trades === 0 ? (
+                ) : agentsLive ? (
                   <div className="leader-card__pnl" style={{ color: "var(--text-tertiary)" }}>
-                    No trades yet
+                    Awaiting first trade
                   </div>
                 ) : (
-                  <div className={`leader-card__pnl ${pnlClass(agent.pnl)}`}>
-                    {pnlPrefix(agent.pnl)}{agent.pnl.toFixed(2)}%
+                  <div className="leader-card__pnl" style={{ color: "var(--text-tertiary)" }}>
+                    &mdash;
                   </div>
                 )}
                 <p className="leader-card__meta">
