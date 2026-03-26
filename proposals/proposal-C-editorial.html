@@ -1,0 +1,1094 @@
+<!--
+  Agent Colosseum — Proposal C: Editorial
+  DNA Code: DNA-B-O-F-N-E
+  Layout: Bento | Nav: Overlay | Hero: Full-viewport | Color: Neutral | Type: Serif
+  Inspiration: Newspaper/Editorial + Linear.app
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Colosseum — OneHack 3.0</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    /* ========================================
+       DESIGN TOKENS
+       ======================================== */
+    :root {
+      /* Colors */
+      --bg: #0b0b0b;
+      --surface: #151515;
+      --elevated: #1c1c1c;
+      --text-primary: #e8e8e8;
+      --text-secondary: rgba(255, 255, 255, 0.45);
+      --text-tertiary: rgba(255, 255, 255, 0.2);
+      --border: rgba(255, 255, 255, 0.07);
+      --accent: #E8553A;
+      --severity-high: #D97706;
+      --severity-medium: rgba(255, 255, 255, 0.4);
+      --diff-remove: rgba(232, 85, 58, 0.5);
+      --diff-add: rgba(255, 255, 255, 0.5);
+      --diff-context: rgba(255, 255, 255, 0.15);
+
+      /* Typography */
+      --font-serif: 'Instrument Serif', Georgia, serif;
+      --font-sans: 'DM Sans', system-ui, sans-serif;
+      --font-mono: 'SFMono-Regular', 'Consolas', 'Liberation Mono', 'Menlo', monospace;
+
+      /* Spacing (4px base) */
+      --sp-1: 4px;
+      --sp-2: 8px;
+      --sp-3: 12px;
+      --sp-4: 16px;
+      --sp-5: 20px;
+      --sp-6: 24px;
+      --sp-7: 28px;
+      --sp-8: 32px;
+      --sp-10: 40px;
+      --sp-12: 48px;
+      --sp-16: 64px;
+
+      /* Radii — only 2 values */
+      --radius-none: 0px;
+      --radius-cell: 8px;
+
+      /* Motion */
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+      --duration-fast: 150ms;
+      --duration-normal: 200ms;
+    }
+
+    /* ========================================
+       RESET & BASE
+       ======================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    /* ========================================
+       REDUCED MOTION
+       ======================================== */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+      html {
+        scroll-behavior: auto;
+      }
+    }
+
+    /* ========================================
+       DNA BADGE
+       ======================================== */
+    .dna-badge {
+      position: fixed;
+      top: var(--sp-4);
+      right: var(--sp-4);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: white;
+      background: rgba(0, 0, 0, 0.8);
+      padding: var(--sp-1) var(--sp-2);
+      border-radius: 4px;
+      z-index: 300;
+      letter-spacing: 0.03em;
+    }
+
+    /* ========================================
+       OVERLAY NAVIGATION (checkbox hack)
+       ======================================== */
+    .nav-toggle {
+      position: fixed;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+    }
+
+    .nav-open-label {
+      position: fixed;
+      top: var(--sp-4);
+      left: var(--sp-4);
+      z-index: 210;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: rgba(255, 255, 255, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: var(--sp-2) var(--sp-4);
+      border-radius: var(--radius-none);
+      background: transparent;
+      cursor: pointer;
+      user-select: none;
+      transition: color var(--duration-fast) var(--ease-out);
+    }
+
+    .nav-open-label:hover {
+      color: var(--text-primary);
+    }
+
+    .nav-open-label:active {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .nav-open-label:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .nav-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--duration-normal) var(--ease-out);
+    }
+
+    .nav-close-label {
+      position: fixed;
+      top: var(--sp-4);
+      left: var(--sp-4);
+      z-index: 210;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: rgba(255, 255, 255, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: var(--sp-2) var(--sp-4);
+      border-radius: var(--radius-none);
+      background: transparent;
+      cursor: pointer;
+      user-select: none;
+      opacity: 0;
+      pointer-events: none;
+      transition: color var(--duration-fast) var(--ease-out);
+    }
+
+    .nav-close-label:hover {
+      color: var(--text-primary);
+    }
+
+    .nav-close-label:active {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .nav-close-label:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .nav-toggle:checked ~ .nav-overlay {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .nav-toggle:checked ~ .nav-close-label {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .nav-toggle:checked ~ .nav-open-label {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .nav-links {
+      list-style: none;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-6);
+    }
+
+    .nav-links a {
+      font-family: var(--font-serif);
+      font-size: 48px;
+      font-style: italic;
+      color: rgba(255, 255, 255, 0.3);
+      text-decoration: none;
+      transition: color var(--duration-fast) var(--ease-out);
+      display: block;
+    }
+
+    .nav-links a:hover {
+      color: white;
+    }
+
+    .nav-links a:active {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .nav-links a:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: var(--sp-2);
+    }
+
+    /* ========================================
+       HERO (100vh)
+       ======================================== */
+    .hero {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      text-align: center;
+      padding: var(--sp-6);
+    }
+
+    .hero-dateline {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--text-tertiary);
+      margin-bottom: var(--sp-10);
+    }
+
+    .hero-title {
+      font-family: var(--font-serif);
+      font-size: 72px;
+      font-style: italic;
+      font-weight: 400;
+      color: white;
+      letter-spacing: -0.02em;
+      line-height: 1.0;
+      margin-bottom: var(--sp-8);
+    }
+
+    .hero-rule {
+      width: var(--sp-16);
+      height: 1px;
+      background: var(--accent);
+      border: none;
+      margin-bottom: var(--sp-8);
+    }
+
+    .hero-description {
+      font-family: var(--font-sans);
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      max-width: 560px;
+      line-height: 1.7;
+    }
+
+    .hero-scroll {
+      position: absolute;
+      bottom: var(--sp-10);
+      color: rgba(255, 255, 255, 0.15);
+      font-size: 20px;
+      animation: scroll-hint 2s ease-in-out infinite;
+    }
+
+    @keyframes scroll-hint {
+      0%, 100% { transform: translateY(-2px); }
+      50% { transform: translateY(2px); }
+    }
+
+    /* ========================================
+       BENTO GRID
+       ======================================== */
+    .bento {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 var(--sp-6) var(--sp-12);
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: var(--sp-3);
+    }
+
+    .bento-cell {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-cell);
+      padding: var(--sp-7) var(--sp-6);
+    }
+
+    .cell-label {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: rgba(255, 255, 255, 0.25);
+      margin-bottom: var(--sp-5);
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+    }
+
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ========================================
+       CELL: Architecture (8 cols)
+       ======================================== */
+    .cell-architecture {
+      grid-column: span 8;
+    }
+
+    .arch-row {
+      display: flex;
+      align-items: baseline;
+      gap: var(--sp-4);
+      padding: var(--sp-4) 0;
+    }
+
+    .arch-row + .arch-row {
+      border-top: 1px solid var(--border);
+    }
+
+    .arch-title {
+      font-family: var(--font-serif);
+      font-size: 17px;
+      font-style: italic;
+      color: white;
+      white-space: nowrap;
+    }
+
+    .arch-desc {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* ========================================
+       CELL: Key Stats (4 cols) — Pull Quote
+       ======================================== */
+    .cell-stats {
+      grid-column: span 4;
+      border-left: 3px solid var(--accent);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .pull-quote {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-style: italic;
+      color: rgba(255, 255, 255, 0.7);
+      line-height: 1.5;
+    }
+
+    .pull-quote-attr {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.25);
+      margin-top: var(--sp-5);
+    }
+
+    /* ========================================
+       CELLS: Bugs (6 cols each)
+       ======================================== */
+    .cell-bug {
+      grid-column: span 6;
+    }
+
+    .severity {
+      font-family: var(--font-sans);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .severity--critical { color: var(--accent); }
+    .severity--high { color: var(--severity-high); }
+    .severity--medium { color: var(--severity-medium); }
+
+    .bug-title {
+      font-family: var(--font-sans);
+      font-size: 15px;
+      font-weight: 600;
+      color: white;
+      margin-top: var(--sp-2);
+    }
+
+    .bug-location {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-top: var(--sp-1);
+    }
+
+    .bug-desc {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: var(--sp-2);
+    }
+
+    .bug-diff {
+      background: #0e0e0e;
+      border-radius: 4px;
+      padding: 10px 14px;
+      margin-top: var(--sp-3);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .diff-remove { color: var(--diff-remove); }
+    .diff-add { color: var(--diff-add); }
+    .diff-ctx { color: var(--diff-context); }
+
+    /* ========================================
+       CELL: Leaderboard (12 cols)
+       ======================================== */
+    .cell-leaderboard {
+      grid-column: span 12;
+    }
+
+    .lb-header {
+      display: grid;
+      grid-template-columns: 48px 1fr 1fr 120px 80px 80px;
+      gap: var(--sp-2);
+      padding-bottom: var(--sp-3);
+      border-bottom: 1px solid var(--border);
+      margin-bottom: var(--sp-3);
+    }
+
+    .lb-header span {
+      font-family: var(--font-sans);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-tertiary);
+    }
+
+    .lb-row {
+      display: grid;
+      grid-template-columns: 48px 1fr 1fr 120px 80px 80px;
+      gap: var(--sp-2);
+      align-items: center;
+      padding: var(--sp-3) 0;
+    }
+
+    .lb-row + .lb-row {
+      border-top: 1px solid var(--border);
+    }
+
+    .lb-row--winner {
+      border-left: 2px solid var(--accent);
+      background: var(--elevated);
+      border-radius: var(--radius-cell);
+      padding: var(--sp-4) var(--sp-3);
+      margin: 0 calc(-1 * var(--sp-3));
+    }
+
+    .lb-rank {
+      font-family: var(--font-serif);
+      font-style: italic;
+    }
+
+    .lb-row--winner .lb-rank {
+      font-size: 22px;
+      color: var(--accent);
+    }
+
+    .lb-row:not(.lb-row--winner) .lb-rank {
+      font-size: 18px;
+      color: var(--text-secondary);
+    }
+
+    .lb-name {
+      font-family: var(--font-sans);
+      font-weight: 600;
+    }
+
+    .lb-row--winner .lb-name {
+      font-size: 16px;
+      color: white;
+    }
+
+    .lb-row:not(.lb-row--winner) .lb-name {
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+
+    .lb-strategy {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.35);
+    }
+
+    .lb-pnl {
+      font-family: var(--font-sans);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .lb-row--winner .lb-pnl {
+      font-size: 20px;
+      color: white;
+    }
+
+    .lb-row:not(.lb-row--winner) .lb-pnl {
+      font-size: 16px;
+      color: var(--text-primary);
+    }
+
+    .lb-trades, .lb-wins {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ========================================
+       CELL: Rounds Chart (7 cols)
+       ======================================== */
+    .cell-rounds {
+      grid-column: span 7;
+    }
+
+    .chart-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: var(--sp-3);
+      height: 160px;
+      margin-bottom: var(--sp-2);
+    }
+
+    .chart-bar-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      justify-content: flex-end;
+    }
+
+    .chart-price {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-secondary);
+      margin-bottom: var(--sp-1);
+    }
+
+    .chart-bar {
+      width: 100%;
+      max-width: 56px;
+      background: rgba(232, 85, 58, 0.4);
+      border-radius: var(--radius-cell) var(--radius-cell) 0 0;
+    }
+
+    .chart-round-label {
+      font-family: var(--font-sans);
+      font-size: 10px;
+      color: var(--text-tertiary);
+      margin-top: var(--sp-2);
+    }
+
+    .round-pnl-table {
+      margin-top: var(--sp-4);
+      border-top: 1px solid var(--border);
+      padding-top: var(--sp-3);
+    }
+
+    .round-pnl-row {
+      display: flex;
+      gap: var(--sp-3);
+      font-family: var(--font-sans);
+      font-size: 10px;
+      color: var(--text-tertiary);
+      font-variant-numeric: tabular-nums;
+      margin-bottom: var(--sp-1);
+    }
+
+    .round-pnl-row span:first-child {
+      width: 28px;
+      flex-shrink: 0;
+    }
+
+    /* ========================================
+       CELL: Pool Stats (5 cols)
+       ======================================== */
+    .cell-pool {
+      grid-column: span 5;
+    }
+
+    .pool-stat {
+      margin-bottom: var(--sp-4);
+    }
+
+    .pool-stat-label {
+      font-family: var(--font-sans);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-tertiary);
+      margin-bottom: var(--sp-1);
+    }
+
+    .pool-stat-value {
+      font-family: var(--font-sans);
+      font-size: 18px;
+      font-weight: 700;
+      color: white;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .pool-ids {
+      margin-top: var(--sp-5);
+      padding-top: var(--sp-3);
+      border-top: 1px solid var(--border);
+    }
+
+    .pool-id {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.15);
+      margin-bottom: var(--sp-1);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ========================================
+       CELL: Verify On-Chain (12 cols)
+       ======================================== */
+    .cell-verify {
+      grid-column: span 12;
+    }
+
+    .cell-verify details {
+      cursor: default;
+    }
+
+    .cell-verify summary {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      color: var(--accent);
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
+      padding: var(--sp-1) 0;
+    }
+
+    .cell-verify summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .cell-verify summary:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .verify-code {
+      background: #0e0e0e;
+      border-radius: 4px;
+      padding: var(--sp-4);
+      margin-top: var(--sp-3);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .verify-comment {
+      color: rgba(255, 255, 255, 0.25);
+    }
+
+    /* ========================================
+       FOOTER
+       ======================================== */
+    .footer {
+      text-align: center;
+      padding: var(--sp-16) var(--sp-6) var(--sp-12);
+    }
+
+    .footer-main {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-bottom: var(--sp-3);
+    }
+
+    .footer-link {
+      color: var(--accent);
+      text-decoration: none;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      transition: opacity var(--duration-fast) var(--ease-out);
+    }
+
+    .footer-link:hover {
+      opacity: 0.7;
+    }
+
+    .footer-link:active {
+      opacity: 0.5;
+    }
+
+    .footer-link:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .footer-inspiration {
+      font-family: var(--font-sans);
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.1);
+      margin-top: var(--sp-4);
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ========================================
+       RESPONSIVE (mobile: stack all cells)
+       ======================================== */
+    @media (max-width: 768px) {
+      .hero-title {
+        font-size: 48px;
+      }
+
+      .bento {
+        padding: 0 var(--sp-3) var(--sp-8);
+        gap: var(--sp-2);
+      }
+
+      .cell-architecture,
+      .cell-stats,
+      .cell-bug,
+      .cell-leaderboard,
+      .cell-rounds,
+      .cell-pool,
+      .cell-verify {
+        grid-column: span 12;
+      }
+
+      .lb-header,
+      .lb-row {
+        grid-template-columns: 36px 1fr 100px;
+        gap: var(--sp-1);
+      }
+
+      .lb-header .lb-h-strategy,
+      .lb-header .lb-h-trades,
+      .lb-header .lb-h-wins,
+      .lb-row .lb-strategy,
+      .lb-row .lb-trades,
+      .lb-row .lb-wins {
+        display: none;
+      }
+
+      .lb-row--winner {
+        margin: 0 calc(-1 * var(--sp-2));
+        padding: var(--sp-3) var(--sp-2);
+      }
+
+      .nav-links a {
+        font-size: 36px;
+      }
+
+      .pull-quote {
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- DNA Badge -->
+  <div class="dna-badge" aria-hidden="true">DNA-B-O-F-N-E</div>
+
+  <!-- ============================================
+       OVERLAY NAVIGATION (checkbox hack, no JS)
+       ============================================ -->
+  <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-hidden="true">
+  <label for="nav-toggle" class="nav-open-label" role="button" aria-label="Open navigation menu">MENU</label>
+  <label for="nav-toggle" class="nav-close-label" role="button" aria-label="Close navigation menu">CLOSE</label>
+  <nav class="nav-overlay" aria-label="Main navigation">
+    <ul class="nav-links">
+      <li><label for="nav-toggle"><a href="#architecture">Architecture</a></label></li>
+      <li><label for="nav-toggle"><a href="#bugs">Bugs</a></label></li>
+      <li><label for="nav-toggle"><a href="#leaderboard">Leaderboard</a></label></li>
+      <li><label for="nav-toggle"><a href="#pool">Pool</a></label></li>
+    </ul>
+  </nav>
+
+  <!-- ============================================
+       HERO (100vh)
+       ============================================ -->
+  <header class="hero">
+    <p class="hero-dateline">OneHack 3.0 &middot; AI &amp; GameFi</p>
+    <h1 class="hero-title">
+      Agent<br>Colosseum
+    </h1>
+    <hr class="hero-rule">
+    <p class="hero-description">
+      AI agents compete by trading on a constant-product AMM. We audited the official SDK, found it broken in four ways, fixed it, built the missing DEX, and ran three AI traders on it.
+    </p>
+    <div class="hero-scroll" aria-hidden="true">&#8595;</div>
+  </header>
+
+  <!-- ============================================
+       BENTO GRID
+       ============================================ -->
+  <main class="bento">
+
+    <!-- Row 1: Architecture (8) + Key Stats (4) -->
+    <section id="architecture" class="bento-cell cell-architecture" aria-label="Architecture">
+      <div class="cell-label">Architecture</div>
+      <div class="arch-row">
+        <span class="arch-title">01 &mdash; Fixed Agent SDK</span>
+        <span class="arch-desc">4 bugs patched</span>
+      </div>
+      <div class="arch-row">
+        <span class="arch-title">02 &mdash; Constant-Product AMM</span>
+        <span class="arch-desc">First working DEX, x*y=k</span>
+      </div>
+      <div class="arch-row">
+        <span class="arch-title">03 &mdash; Agent Colosseum</span>
+        <span class="arch-desc">AI trading competition</span>
+      </div>
+    </section>
+
+    <aside class="bento-cell cell-stats" aria-label="Key statistics">
+      <blockquote class="pull-quote">
+        4 bugs fixed &middot; 3 agents &middot; 39 tests &middot; 5 rounds
+      </blockquote>
+      <p class="pull-quote-attr">All verified on testnet</p>
+    </aside>
+
+    <!-- Row 2-3: Bugs -->
+    <section id="bugs" class="bento-cell cell-bug" aria-label="Bug: Dead Swap Package">
+      <span class="severity severity--critical">Critical</span>
+      <h3 class="bug-title">Dead Swap Package</h3>
+      <p class="bug-location">client.ts:115</p>
+      <p class="bug-desc">Hardcoded PACKAGE_ID doesn't exist on testnet.</p>
+      <div class="bug-diff"><span class="diff-remove">- const PACKAGE_ID = "0x688..."</span>
+<span class="diff-add">+ constructor({ ammPackageId }: Options)</span></div>
+    </section>
+
+    <section class="bento-cell cell-bug" aria-label="Bug: Zero Slippage">
+      <span class="severity severity--high">High</span>
+      <h3 class="bug-title">Zero Slippage</h3>
+      <p class="bug-location">client.ts:178</p>
+      <p class="bug-desc">min_amount_out = 0.</p>
+      <div class="bug-diff"><span class="diff-remove">- tx.pure.u64(0)</span>
+<span class="diff-add">+ tx.pure.u64(minAmountOut)</span></div>
+    </section>
+
+    <section class="bento-cell cell-bug" aria-label="Bug: Untrusted Bytecode">
+      <span class="severity severity--high">High</span>
+      <h3 class="bug-title">Untrusted Bytecode</h3>
+      <p class="bug-location">client.ts:225</p>
+      <p class="bug-desc">External API bytecode.</p>
+      <div class="bug-diff"><span class="diff-remove">- const { bytecode } = await fetch(EXTERNAL_API)</span>
+<span class="diff-add">+ // Removed: use local compilation</span></div>
+    </section>
+
+    <section class="bento-cell cell-bug" aria-label="Bug: Tool Call Dropping">
+      <span class="severity severity--medium">Medium</span>
+      <h3 class="bug-title">Tool Call Dropping</h3>
+      <p class="bug-location">AgentRuntime.ts:41</p>
+      <p class="bug-desc">Only first executed.</p>
+      <div class="bug-diff"><span class="diff-remove">- const toolCall = message.tool_calls[0]</span>
+<span class="diff-add">+ for (const toolCall of message.tool_calls)</span></div>
+    </section>
+
+    <!-- Row 4: Leaderboard (12) -->
+    <section id="leaderboard" class="bento-cell cell-leaderboard" aria-label="Agent leaderboard">
+      <div class="cell-label">Leaderboard <span class="pulse-dot"></span></div>
+      <div class="lb-header" role="row">
+        <span>#</span>
+        <span>Agent</span>
+        <span class="lb-h-strategy">Strategy</span>
+        <span>PnL</span>
+        <span class="lb-h-trades">Trades</span>
+        <span class="lb-h-wins">Wins</span>
+      </div>
+      <!-- Winner -->
+      <div class="lb-row lb-row--winner" role="row">
+        <span class="lb-rank">1</span>
+        <span class="lb-name">MeanRevBot</span>
+        <span class="lb-strategy">Mean Reversion</span>
+        <span class="lb-pnl">+8.97%</span>
+        <span class="lb-trades">5</span>
+        <span class="lb-wins">3</span>
+      </div>
+      <div class="lb-row" role="row">
+        <span class="lb-rank">2</span>
+        <span class="lb-name">MMBot</span>
+        <span class="lb-strategy">Market Maker</span>
+        <span class="lb-pnl">+8.39%</span>
+        <span class="lb-trades">0</span>
+        <span class="lb-wins">1</span>
+      </div>
+      <div class="lb-row" role="row">
+        <span class="lb-rank">3</span>
+        <span class="lb-name">MomentumBot</span>
+        <span class="lb-strategy">Momentum</span>
+        <span class="lb-pnl">+6.09%</span>
+        <span class="lb-trades">4</span>
+        <span class="lb-wins">2</span>
+      </div>
+    </section>
+
+    <!-- Row 5: Rounds Chart (7) + Pool Stats (5) -->
+    <section class="bento-cell cell-rounds" aria-label="Round history chart">
+      <div class="cell-label">Round History</div>
+      <div class="chart-bars">
+        <div class="chart-bar-group">
+          <span class="chart-price">1.0589</span>
+          <div class="chart-bar" style="height: 29%;"></div>
+          <span class="chart-round-label">R1</span>
+        </div>
+        <div class="chart-bar-group">
+          <span class="chart-price">1.0876</span>
+          <div class="chart-bar" style="height: 44%;"></div>
+          <span class="chart-round-label">R2</span>
+        </div>
+        <div class="chart-bar-group">
+          <span class="chart-price">1.1493</span>
+          <div class="chart-bar" style="height: 75%;"></div>
+          <span class="chart-round-label">R3</span>
+        </div>
+        <div class="chart-bar-group">
+          <span class="chart-price">1.1778</span>
+          <div class="chart-bar" style="height: 89%;"></div>
+          <span class="chart-round-label">R4</span>
+        </div>
+        <div class="chart-bar-group">
+          <span class="chart-price">1.1678</span>
+          <div class="chart-bar" style="height: 84%;"></div>
+          <span class="chart-round-label">R5</span>
+        </div>
+      </div>
+      <div class="round-pnl-table">
+        <div class="round-pnl-row">
+          <span>R1</span> Mom +6.1% &middot; MeanRev +2.9% &middot; MM +3.0%
+        </div>
+        <div class="round-pnl-row">
+          <span>R2</span> Mom +4.0% &middot; MeanRev +4.4% &middot; MM +4.4%
+        </div>
+        <div class="round-pnl-row">
+          <span>R3</span> Mom +5.7% &middot; MeanRev +7.9% &middot; MM +7.5%
+        </div>
+        <div class="round-pnl-row">
+          <span>R4</span> Mom +6.3% &middot; MeanRev +9.7% &middot; MM +8.9%
+        </div>
+        <div class="round-pnl-row">
+          <span>R5</span> Mom +6.1% &middot; MeanRev +9.0% &middot; MM +8.4%
+        </div>
+      </div>
+    </section>
+
+    <section id="pool" class="bento-cell cell-pool" aria-label="Pool statistics">
+      <div class="cell-label">Pool <span class="pulse-dot"></span></div>
+      <div class="pool-stat">
+        <div class="pool-stat-label">Reserve X</div>
+        <div class="pool-stat-value">10.00B</div>
+      </div>
+      <div class="pool-stat">
+        <div class="pool-stat-label">Reserve Y</div>
+        <div class="pool-stat-value">9.99B</div>
+      </div>
+      <div class="pool-stat">
+        <div class="pool-stat-label">LP Supply</div>
+        <div class="pool-stat-value">10.00B</div>
+      </div>
+      <div class="pool-stat">
+        <div class="pool-stat-label">Price</div>
+        <div class="pool-stat-value">0.999900</div>
+      </div>
+      <div class="pool-stat">
+        <div class="pool-stat-label">Fee</div>
+        <div class="pool-stat-value">0.3%</div>
+      </div>
+      <div class="pool-ids">
+        <div class="pool-id">Pool: 0x79022dd6...aeedecc</div>
+        <div class="pool-id">Package: 0xf5b9c384...c8392b7</div>
+      </div>
+    </section>
+
+    <!-- Row 6: Verify On-Chain (12) -->
+    <section class="bento-cell cell-verify" aria-label="On-chain verification">
+      <details>
+        <summary>Verify on-chain &#8594;</summary>
+        <div class="verify-code"><span class="verify-comment"># Pool reserves</span>
+curl -s https://rpc-testnet.onelabs.cc -X POST \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"sui_getObject","params":["0x79022dd6d0f9b9008e56ae55ca8edcd7b4f06f675d6215090b060eb55aeedecc",{"showContent":true}]}' \
+  | python3 -m json.tool
+
+<span class="verify-comment"># MomentumBot profile</span>
+curl -s https://rpc-testnet.onelabs.cc -X POST \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"sui_getObject","params":["0x7f707c63d0fde46a2ec3cd12c7919b342b5ab9a6a1787cff3a6aec99e3cec8cd",{"showContent":true}]}' \
+  | python3 -m json.tool
+
+<span class="verify-comment"># Arena state</span>
+curl -s https://rpc-testnet.onelabs.cc -X POST \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"sui_getObject","params":["0xf9830ccbce88ce83198b6bd36fe50fb2b6ac102d1b2ea07b8fa61df74264a813",{"showContent":true}]}' \
+  | python3 -m json.tool</div>
+      </details>
+    </section>
+
+  </main>
+
+  <!-- ============================================
+       FOOTER
+       ============================================ -->
+  <footer class="footer">
+    <p class="footer-main">Agent Colosseum &middot; OneHack 3.0 &middot; OneChain</p>
+    <a href="https://github.com/Yonkoo11/agent-colosseum" class="footer-link" target="_blank" rel="noopener noreferrer">GitHub &#8594;</a>
+    <p class="footer-inspiration">Inspired by: Newspaper/Editorial (authority through typography) + Linear (dark mode restraint)</p>
+  </footer>
+
+</body>
+</html>
