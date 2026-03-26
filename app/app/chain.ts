@@ -103,7 +103,9 @@ export async function fetchAgents(): Promise<AgentData[]> {
           const fields = json?.result?.data?.content?.fields
           if (!fields) return null
 
-          const pnlRaw = BigInt(fields.cumulative_pnl)
+          const pnlField = fields.cumulative_pnl
+          if (pnlField === undefined || pnlField === null) return null
+          const pnlRaw = BigInt(pnlField)
           const pnlDelta = Number(pnlRaw - PNL_OFFSET)
 
           return {

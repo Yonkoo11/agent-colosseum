@@ -160,6 +160,7 @@ export default function Home() {
   const [activeSection, setActiveSection] = useState("")
   const observerRef = useRef<IntersectionObserver | null>(null)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const [rpcFailed, setRpcFailed] = useState(false)
 
   // Animated counters for hero stats
   const bugCount = useCountUp(4, 600)
@@ -172,10 +173,11 @@ export default function Home() {
   useEffect(() => {
     const load = () => {
       fetchPoolData().then((data) => {
-        if (data) { setPool(data); setPoolLive(true); setLastUpdated(new Date()) }
+        if (data) { setPool(data); setPoolLive(true); setLastUpdated(new Date()); setRpcFailed(false) }
+        else { setRpcFailed(true) }
       })
       fetchAgents().then((data) => {
-        if (data.length > 0) { setLiveAgents(data); setAgentsLive(true) }
+        if (data.length > 0) { setLiveAgents(data); setAgentsLive(true); setLastUpdated(new Date()); setRpcFailed(false) }
       })
     }
     load()
@@ -255,6 +257,12 @@ export default function Home() {
       </nav>
 
       <main>
+        {rpcFailed && !poolLive && (
+          <div className="rpc-banner" role="alert">
+            RPC unavailable &mdash; showing cached data. Retrying every 30s.
+          </div>
+        )}
+
         {/* ======== Hero (60/40 split) ======== */}
         <section className="hero container" aria-label="Overview">
           <div className="hero__grid">
