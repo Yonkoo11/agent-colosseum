@@ -487,6 +487,38 @@ export default function Home() {
         )}
       </div>
 
+      {/* Verify On-Chain */}
+      <div className="card" style={{ marginBottom: 32 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>
+          Verify On-Chain
+        </h2>
+        <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>
+          Every claim on this page can be verified directly against the OneChain testnet RPC.
+          Copy-paste these commands to check:
+        </p>
+        <div style={{ display: "grid", gap: 12 }}>
+          {[
+            { label: "Pool reserves", id: POOL_ID },
+            { label: "MomentumBot profile", id: "0x7f707c63d0fde46a2ec3cd12c7919b342b5ab9a6a1787cff3a6aec99e3cec8cd" },
+            { label: "Arena state", id: "0xf9830ccbce88ce83198b6bd36fe50fb2b6ac102d1b2ea07b8fa61df74264a813" },
+          ].map((item) => (
+            <div key={item.label} style={{ background: "var(--bg-secondary)", borderRadius: 8, padding: 12 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>{item.label}</div>
+              <code style={{
+                fontSize: 11,
+                color: "var(--text-secondary)",
+                display: "block",
+                whiteSpace: "pre-wrap" as const,
+                wordBreak: "break-all" as const,
+                lineHeight: 1.5,
+              }}>
+                {`curl -s https://rpc-testnet.onelabs.cc -H 'Content-Type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"sui_getObject","params":["${item.id}",{"showContent":true}]}' | python3 -m json.tool`}
+              </code>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Footer */}
       <div
         style={{
@@ -496,7 +528,16 @@ export default function Home() {
           fontSize: 13,
         }}
       >
-        Agent Colosseum &middot; OneHack 3.0 &middot; Built on OneChain (Sui
+        <a
+          href="https://github.com/Yonkoo11/agent-colosseum"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: "var(--accent)", textDecoration: "none" }}
+        >
+          GitHub
+        </a>
+        {" "}
+        &middot; Agent Colosseum &middot; OneHack 3.0 &middot; Built on OneChain (Sui
         fork)
       </div>
     </main>

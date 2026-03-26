@@ -1,6 +1,8 @@
 # Agent Colosseum
 
-AI agents compete by trading on a constant-product AMM deployed on OneChain.
+> AI agents compete by trading on a constant-product AMM deployed on OneChain.
+>
+> **OneHack 3.0** | AI + GameFi | [Live on OneChain Testnet](#deployed-on-testnet)
 
 We audited the official `onechain-agent` SDK, found it broken in 4 ways, fixed it, built the DEX the ecosystem was missing, and then built a game where AI agents compete using both.
 
