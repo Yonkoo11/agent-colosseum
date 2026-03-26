@@ -206,38 +206,55 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ======== Architecture (staircase) ======== */}
-        <section id="architecture" className="architecture container" aria-label="Architecture">
+        {/* ======== Architecture (stacked layers) ======== */}
+        <section id="architecture" className="architecture container section-glow" aria-label="Architecture">
           <div className="section-marker">
             <span className="section-marker__bar" />
             <span className="section-marker__text">Architecture</span>
           </div>
 
-          <div className="arch-row arch-row--1">
-            <span className="arch-row__num">01</span>
-            <div>
-              <h3 className="arch-row__title">Fixed Agent SDK</h3>
-              <p className="arch-row__desc">4 bugs found and patched in onechain-agent</p>
+          <div className="arch-stack">
+            <div className="arch-layer arch-layer--active">
+              <span className="arch-layer__num">01</span>
+              <div>
+                <h3 className="arch-layer__title">Fixed Agent SDK</h3>
+                <p className="arch-layer__desc">We read their code, found 4 bugs, patched them. The foundation everything else depends on.</p>
+              </div>
+              <a href="#bugs" className="arch-layer__tag">See bugs</a>
             </div>
-          </div>
-          <div className="arch-row arch-row--2">
-            <span className="arch-row__num">02</span>
-            <div>
-              <h3 className="arch-row__title">Constant-Product AMM</h3>
-              <p className="arch-row__desc">First working DEX on OneChain. x*y=k with 0.3% fee</p>
+
+            <div className="arch-connector">
+              <span className="arch-connector__line" />
+              <span className="arch-connector__label">builds on</span>
             </div>
-          </div>
-          <div className="arch-row arch-row--3">
-            <span className="arch-row__num">03</span>
-            <div>
-              <h3 className="arch-row__title">Agent Colosseum</h3>
-              <p className="arch-row__desc">AI agents compete, scored by PnL</p>
+
+            <div className="arch-layer">
+              <span className="arch-layer__num">02</span>
+              <div>
+                <h3 className="arch-layer__title">Constant-Product AMM</h3>
+                <p className="arch-layer__desc">First working token exchange on OneChain. x*y=k with 0.3% fee, 20 passing tests.</p>
+              </div>
+              <a href="#pool" className="arch-layer__tag">See pool</a>
+            </div>
+
+            <div className="arch-connector">
+              <span className="arch-connector__line" />
+              <span className="arch-connector__label">enables</span>
+            </div>
+
+            <div className="arch-layer">
+              <span className="arch-layer__num">03</span>
+              <div>
+                <h3 className="arch-layer__title">Agent Colosseum</h3>
+                <p className="arch-layer__desc">3 AI agents with different strategies compete by trading on the real DEX, ranked by PnL.</p>
+              </div>
+              <a href="#leaderboard" className="arch-layer__tag">See rankings</a>
             </div>
           </div>
         </section>
 
         {/* ======== Bugs (2-col grid) ======== */}
-        <section id="bugs" className="bugs container" aria-label="Bug report">
+        <section id="bugs" className="bugs container section-glow" aria-label="Bug report">
           <div className="section-marker">
             <span className="section-marker__bar" />
             <span className="section-marker__text">Threat Report &mdash; 4 Bugs</span>
@@ -267,7 +284,7 @@ export default function Home() {
         </section>
 
         {/* ======== Leaderboard (asymmetric) ======== */}
-        <section id="leaderboard" className="leaderboard container" aria-label="Leaderboard">
+        <section id="leaderboard" className="leaderboard container section-glow" aria-label="Leaderboard">
           <div className="section-marker">
             <span className="section-marker__bar" />
             <span className="section-marker__text">Leaderboard</span>
