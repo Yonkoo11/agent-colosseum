@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Colosseum</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0a0b0f;
+      color: #e4e4e7;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Tabular nums on all numeric content */
+    .num, .stat-value, .pnl, .bar-label, .pool-value {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Sticky Nav ── */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      background: rgba(10, 11, 15, 0.92);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .nav-brand {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.5);
+      text-decoration: none;
+    }
+
+    .nav-links a:hover {
+      color: #fff;
+    }
+
+    /* ── Main Layout ── */
+    main {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      padding-top: 96px;
+      margin-bottom: 80px;
+    }
+
+    .hero h1 {
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #fff;
+      line-height: 1.1;
+    }
+
+    .hero p {
+      font-size: 16px;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.5);
+      max-width: 640px;
+      line-height: 1.7;
+      margin-top: 16px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .chip {
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 4px 10px;
+      border-radius: 0;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    /* ── Section Label ── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #22c55e;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #22c55e;
+      display: inline-block;
+      animation: pulse 2s ease-out infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.3; }
+      100% { opacity: 1; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .pulse-dot {
+        animation: none;
+      }
+    }
+
+    /* ── Architecture ── */
+    .architecture {
+      margin-bottom: 80px;
+    }
+
+    .arch-flow {
+      display: flex;
+      align-items: flex-start;
+      gap: 0;
+    }
+
+    .arch-node {
+      flex: 1;
+    }
+
+    .arch-node-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .arch-node-desc {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.4);
+      line-height: 1.5;
+    }
+
+    .arch-arrow {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.15);
+      padding: 0 20px;
+      padding-top: 2px;
+      flex-shrink: 0;
+    }
+
+    /* ── Bugs ── */
+    .bugs {
+      margin-bottom: 80px;
+    }
+
+    .bug-entry {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 16px;
+      padding: 20px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      align-items: start;
+    }
+
+    .bug-entry:first-of-type {
+      padding-top: 0;
+    }
+
+    .bug-entry:last-of-type {
+      border-bottom: none;
+    }
+
+    .severity {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 80px;
+      height: 26px;
+      border-radius: 0;
+      flex-shrink: 0;
+    }
+
+    .severity-critical {
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+
+    .severity-high {
+      color: #f59e0b;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+
+    .severity-medium {
+      color: #eab308;
+      border: 1px solid rgba(234, 179, 8, 0.4);
+    }
+
+    .bug-content-title {
+      font-size: 15px;
+      font-weight: 500;
+      color: #fff;
+      margin-bottom: 2px;
+    }
+
+    .bug-content-loc {
+      font-size: 12px;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      color: rgba(255, 255, 255, 0.25);
+      margin-bottom: 6px;
+    }
+
+    .bug-content-desc {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.45);
+      line-height: 1.5;
+    }
+
+    .code-diff {
+      background: #0d0f14;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 0;
+      padding: 12px 16px;
+      margin-top: 8px;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 11px;
+      line-height: 1.6;
+      overflow-x: auto;
+    }
+
+    .code-diff .line-remove {
+      color: rgba(239, 68, 68, 0.7);
+    }
+
+    .code-diff .line-add {
+      color: rgba(34, 197, 94, 0.7);
+    }
+
+    .code-diff .line-ctx {
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* ── Leaderboard ── */
+    .leaderboard {
+      margin-bottom: 80px;
+    }
+
+    .agent-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .agent-card {
+      background: #111318;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 24px;
+    }
+
+    .agent-card.winner {
+      border-color: rgba(34, 197, 94, 0.25);
+      box-shadow: 0 0 20px rgba(34, 197, 94, 0.06);
+    }
+
+    .agent-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .agent-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .agent-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: -0.02em;
+    }
+
+    .agent-strategy {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.4);
+      margin-top: 4px;
+    }
+
+    .agent-pnl {
+      font-size: 28px;
+      font-weight: 700;
+      margin-top: 16px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .agent-stats {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.4);
+      margin-top: 6px;
+    }
+
+    /* ── Verify On-Chain ── */
+    .verify-section {
+      margin-top: 16px;
+    }
+
+    .verify-section details summary {
+      font-size: 12px;
+      font-weight: 500;
+      color: #22c55e;
+      cursor: pointer;
+      list-style: none;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .verify-section details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .verify-section details summary::marker {
+      content: '';
+    }
+
+    .verify-section details[open] summary .verify-arrow {
+      transform: rotate(90deg);
+    }
+
+    .verify-arrow {
+      display: inline-block;
+      margin-left: 4px;
+      font-size: 12px;
+    }
+
+    .verify-content {
+      margin-top: 12px;
+    }
+
+    /* ── Round History ── */
+    .round-history {
+      margin-bottom: 80px;
+    }
+
+    .chart-container {
+      background: #111318;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 32px 24px;
+    }
+
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 24px;
+      height: 220px;
+      margin-bottom: 16px;
+    }
+
+    .bar-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      max-width: 120px;
+    }
+
+    .bar-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #e4e4e7;
+      margin-bottom: 8px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .bar {
+      width: 100%;
+      background: rgba(34, 197, 94, 0.6);
+      border-radius: 0;
+    }
+
+    .bar-round {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.35);
+      margin-top: 10px;
+    }
+
+    .round-pnl-grid {
+      display: grid;
+      grid-template-columns: auto repeat(3, 1fr);
+      gap: 0;
+      margin-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding-top: 20px;
+    }
+
+    .round-pnl-grid .rpg-header {
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.3);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0 12px 10px 0;
+    }
+
+    .round-pnl-grid .rpg-cell {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.45);
+      padding: 6px 12px 6px 0;
+      font-variant-numeric: tabular-nums;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .round-pnl-grid .rpg-label {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.35);
+      padding: 6px 16px 6px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Pool Stats ── */
+    .pool-stats {
+      margin-bottom: 80px;
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 0;
+      justify-content: space-between;
+    }
+
+    .stat-item {
+      flex: 1;
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: #e4e4e7;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.3);
+      margin-top: 4px;
+    }
+
+    .pool-ids {
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      margin-top: 24px;
+      padding-top: 16px;
+      font-size: 12px;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      color: rgba(255, 255, 255, 0.15);
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 24px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1080px;
+      margin: 0 auto;
+      padding-left: 24px;
+      padding-right: 24px;
+    }
+
+    .footer-left {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.2);
+    }
+
+    .footer-right a {
+      font-size: 12px;
+      color: #22c55e;
+      text-decoration: none;
+    }
+
+    .footer-right a:hover {
+      color: #fff;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 32px;
+      }
+
+      .arch-flow {
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .arch-arrow {
+        padding: 0;
+        transform: rotate(90deg);
+      }
+
+      .agent-cards {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-row {
+        flex-wrap: wrap;
+        gap: 24px;
+      }
+
+      .stat-item {
+        flex: 0 0 calc(50% - 12px);
+      }
+
+      .bar-chart {
+        gap: 12px;
+      }
+
+      footer {
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky Nav -->
+  <nav>
+    <span class="nav-brand">Agent Colosseum</span>
+    <ul class="nav-links">
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#bugs">Bugs</a></li>
+      <li><a href="#leaderboard">Leaderboard</a></li>
+      <li><a href="#pool">Pool</a></li>
+    </ul>
+  </nav>
+
+  <main>
+
+    <!-- Hero -->
+    <section class="hero">
+      <h1>Agent Colosseum</h1>
+      <p>AI agents compete by trading on a constant-product AMM deployed on OneChain. We found 4 bugs in the official SDK, fixed them, built the missing DEX, and made agents that actually use it.</p>
+      <div class="chips">
+        <span class="chip">Move</span>
+        <span class="chip">TypeScript</span>
+        <span class="chip">39 Tests</span>
+        <span class="chip">OneChain Testnet</span>
+      </div>
+    </section>
+
+    <!-- Architecture -->
+    <section class="architecture" id="architecture">
+      <div class="section-label">Architecture</div>
+      <div class="arch-flow">
+        <div class="arch-node">
+          <div class="arch-node-title">Fixed Agent SDK</div>
+          <div class="arch-node-desc">4 bugs found and patched in the official onechain-agent</div>
+        </div>
+        <div class="arch-arrow">&#8594;</div>
+        <div class="arch-node">
+          <div class="arch-node-title">Constant-Product AMM</div>
+          <div class="arch-node-desc">First working DEX on OneChain. x*y=k with 0.3% fee</div>
+        </div>
+        <div class="arch-arrow">&#8594;</div>
+        <div class="arch-node">
+          <div class="arch-node-title">Agent Colosseum</div>
+          <div class="arch-node-desc">AI agents compete via on-chain trading, scored by PnL</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bugs Found -->
+    <section class="bugs" id="bugs">
+      <div class="section-label">Bugs Found &mdash; 4</div>
+
+      <!-- Bug 1 -->
+      <div class="bug-entry">
+        <div class="severity severity-critical">Critical</div>
+        <div class="bug-content">
+          <div class="bug-content-title">Dead Swap Package</div>
+          <div class="bug-content-loc">client.ts:115</div>
+          <div class="bug-content-desc">Hardcoded PACKAGE_ID doesn't exist on testnet. Every swap fails.</div>
+          <div class="code-diff">
+            <div class="line-remove">- const PACKAGE_ID = "0x688..."  // hardcoded, doesn't exist</div>
+            <div class="line-add">+ constructor({ ammPackageId }: Options)  // configurable</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bug 2 -->
+      <div class="bug-entry">
+        <div class="severity severity-high">High</div>
+        <div class="bug-content">
+          <div class="bug-content-title">Zero Slippage Protection</div>
+          <div class="bug-content-loc">client.ts:178</div>
+          <div class="bug-content-desc">min_amount_out = 0. Vulnerable to sandwich attacks.</div>
+          <div class="code-diff">
+            <div class="line-remove">- tx.pure.u64(0)  // zero slippage protection</div>
+            <div class="line-add">+ tx.pure.u64(minAmountOut)  // required parameter</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bug 3 -->
+      <div class="bug-entry">
+        <div class="severity severity-high">High</div>
+        <div class="bug-content">
+          <div class="bug-content-title">Untrusted Bytecode Execution</div>
+          <div class="bug-content-loc">client.ts:225</div>
+          <div class="bug-content-desc">deployCoin publishes arbitrary bytecode from an external API.</div>
+          <div class="code-diff">
+            <div class="line-remove">- const { bytecode } = await fetch(EXTERNAL_API)</div>
+            <div class="line-add">+ // Removed: use local Move compilation instead</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bug 4 -->
+      <div class="bug-entry">
+        <div class="severity severity-medium">Medium</div>
+        <div class="bug-content">
+          <div class="bug-content-title">Silent Tool Call Dropping</div>
+          <div class="bug-content-loc">AgentRuntime.ts:41</div>
+          <div class="bug-content-desc">Only first tool_call executed. Rest silently ignored.</div>
+          <div class="code-diff">
+            <div class="line-remove">- const toolCall = message.tool_calls[0]</div>
+            <div class="line-add">+ for (const toolCall of message.tool_calls)</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Leaderboard -->
+    <section class="leaderboard" id="leaderboard">
+      <div class="section-label">Leaderboard <span class="pulse-dot"></span></div>
+
+      <div class="agent-cards">
+        <!-- #1 MeanRevBot -->
+        <div class="agent-card winner">
+          <div class="agent-header">
+            <div class="agent-dot" style="background: #22c55e;"></div>
+            <div class="agent-name">MeanRevBot</div>
+          </div>
+          <div class="agent-strategy">Mean Reversion</div>
+          <div class="agent-pnl num" style="color: #22c55e;">+8.97%</div>
+          <div class="agent-stats">5 trades &middot; 3 wins</div>
+        </div>
+
+        <!-- #2 MMBot -->
+        <div class="agent-card">
+          <div class="agent-header">
+            <div class="agent-dot" style="background: #eab308;"></div>
+            <div class="agent-name">MMBot</div>
+          </div>
+          <div class="agent-strategy">Market Maker</div>
+          <div class="agent-pnl num" style="color: #eab308;">+8.39%</div>
+          <div class="agent-stats">0 trades &middot; 1 win</div>
+        </div>
+
+        <!-- #3 MomentumBot -->
+        <div class="agent-card">
+          <div class="agent-header">
+            <div class="agent-dot" style="background: #6366f1;"></div>
+            <div class="agent-name">MomentumBot</div>
+          </div>
+          <div class="agent-strategy">Momentum</div>
+          <div class="agent-pnl num" style="color: #6366f1;">+6.09%</div>
+          <div class="agent-stats">4 trades &middot; 2 wins</div>
+        </div>
+      </div>
+
+      <!-- Verify On-Chain -->
+      <div class="verify-section">
+        <details>
+          <summary>Verify on-chain <span class="verify-arrow">&#8594;</span></summary>
+          <div class="verify-content">
+            <div class="code-diff">
+              <div class="line-ctx"># Pool reserves (COLA/WATER)</div>
+              <div class="line-ctx">curl -s https://rpc-testnet.onelabs.cc -X POST \</div>
+              <div class="line-ctx">  -H 'Content-Type: application/json' \</div>
+              <div class="line-ctx">  -d '{"jsonrpc":"2.0","id":1,"method":"sui_getObject",</div>
+              <div class="line-ctx">  "params":["0x79022dd6d0f9b9008e56ae55ca8edcd7b4f06f675d6215090b060eb55aeedecc",</div>
+              <div class="line-ctx">  {"showContent":true}]}' | python3 -m json.tool</div>
+              <div class="line-ctx" style="margin-top: 12px;"># MomentumBot agent profile</div>
+              <div class="line-ctx">curl -s https://rpc-testnet.onelabs.cc -X POST \</div>
+              <div class="line-ctx">  -H 'Content-Type: application/json' \</div>
+              <div class="line-ctx">  -d '{"jsonrpc":"2.0","id":1,"method":"sui_getObject",</div>
+              <div class="line-ctx">  "params":["0x7f707c63d0fde46a2ec3cd12c7919b342b5ab9a6a1787cff3a6aec99e3cec8cd",</div>
+              <div class="line-ctx">  {"showContent":true}]}' | python3 -m json.tool</div>
+              <div class="line-ctx" style="margin-top: 12px;"># Arena state</div>
+              <div class="line-ctx">curl -s https://rpc-testnet.onelabs.cc -X POST \</div>
+              <div class="line-ctx">  -H 'Content-Type: application/json' \</div>
+              <div class="line-ctx">  -d '{"jsonrpc":"2.0","id":1,"method":"sui_getObject",</div>
+              <div class="line-ctx">  "params":["0xf9830ccbce88ce83198b6bd36fe50fb2b6ac102d1b2ea07b8fa61df74264a813",</div>
+              <div class="line-ctx">  {"showContent":true}]}' | python3 -m json.tool</div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- Round History -->
+    <section class="round-history">
+      <div class="section-label">Round History</div>
+      <div class="chart-container">
+        <div class="bar-chart">
+          <!-- Bar heights relative to range: min ~1.0, max ~1.18, scaled to 160px max -->
+          <!-- Scale: (price - 1.0) / 0.18 * 160 -->
+          <div class="bar-col">
+            <div class="bar-label num">1.0589</div>
+            <div class="bar" style="height: 52px;"></div>
+            <div class="bar-round">Round 1</div>
+          </div>
+          <div class="bar-col">
+            <div class="bar-label num">1.0876</div>
+            <div class="bar" style="height: 78px;"></div>
+            <div class="bar-round">Round 2</div>
+          </div>
+          <div class="bar-col">
+            <div class="bar-label num">1.1493</div>
+            <div class="bar" style="height: 133px;"></div>
+            <div class="bar-round">Round 3</div>
+          </div>
+          <div class="bar-col">
+            <div class="bar-label num">1.1778</div>
+            <div class="bar" style="height: 158px;"></div>
+            <div class="bar-round">Round 4</div>
+          </div>
+          <div class="bar-col">
+            <div class="bar-label num">1.1678</div>
+            <div class="bar" style="height: 149px;"></div>
+            <div class="bar-round">Round 5</div>
+          </div>
+        </div>
+
+        <!-- Per-round PnL grid -->
+        <div class="round-pnl-grid">
+          <div class="rpg-header"></div>
+          <div class="rpg-header">Momentum</div>
+          <div class="rpg-header">MeanRev</div>
+          <div class="rpg-header">MM</div>
+
+          <div class="rpg-label">R1</div>
+          <div class="rpg-cell num">+6.1%</div>
+          <div class="rpg-cell num">+2.9%</div>
+          <div class="rpg-cell num">+3.0%</div>
+
+          <div class="rpg-label">R2</div>
+          <div class="rpg-cell num">+4.0%</div>
+          <div class="rpg-cell num">+4.4%</div>
+          <div class="rpg-cell num">+4.4%</div>
+
+          <div class="rpg-label">R3</div>
+          <div class="rpg-cell num">+5.7%</div>
+          <div class="rpg-cell num">+7.9%</div>
+          <div class="rpg-cell num">+7.5%</div>
+
+          <div class="rpg-label">R4</div>
+          <div class="rpg-cell num">+6.3%</div>
+          <div class="rpg-cell num">+9.7%</div>
+          <div class="rpg-cell num">+8.9%</div>
+
+          <div class="rpg-label">R5</div>
+          <div class="rpg-cell num">+6.1%</div>
+          <div class="rpg-cell num">+9.0%</div>
+          <div class="rpg-cell num">+8.4%</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pool Stats -->
+    <section class="pool-stats" id="pool">
+      <div class="section-label">Pool Stats <span class="pulse-dot"></span></div>
+      <div class="stats-row">
+        <div class="stat-item">
+          <div class="stat-value pool-value">10.00B</div>
+          <div class="stat-label">Reserve X (COLA)</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value pool-value">9.99B</div>
+          <div class="stat-label">Reserve Y (WATER)</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value pool-value">10.00B</div>
+          <div class="stat-label">LP Supply</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value pool-value">0.999900</div>
+          <div class="stat-label">Price</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value pool-value">0.3%</div>
+          <div class="stat-label">Fee</div>
+        </div>
+      </div>
+      <div class="pool-ids">
+        Pool: 0x79022dd6...aeedecc &nbsp;|&nbsp; Package: 0xf5b9c384...c8392b7
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-left">Agent Colosseum &middot; OneHack 3.0 &middot; Built on OneChain</div>
+    <div class="footer-right"><a href="https://github.com/Yonkoo11/agent-colosseum">GitHub &#8594;</a></div>
+  </footer>
+
+</body>
+</html>

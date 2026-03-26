@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Colosseum - Arena Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0a0e1a;
+      --cyan: #06b6d4;
+      --magenta: #ec4899;
+      --amber: #f59e0b;
+      --green: #22c55e;
+      --indigo: #6366f1;
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+      --card-bg: rgba(15, 23, 42, 0.6);
+      --card-border: rgba(148, 163, 184, 0.12);
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      background-image: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(6, 182, 212, 0.12) 0%, transparent 70%);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ---- HERO ---- */
+    .hero {
+      position: relative;
+      padding: 56px 48px;
+      margin: 32px 0 48px;
+      text-align: center;
+      border-radius: 16px;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      padding: 2px;
+      background: linear-gradient(90deg, var(--cyan), var(--magenta), var(--amber), var(--cyan));
+      background-size: 300% 100%;
+      animation: borderGlow 4s linear infinite;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+    }
+
+    @keyframes borderGlow {
+      0%   { background-position: 0% 50%; }
+      100% { background-position: 300% 50%; }
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, var(--cyan), #fff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 16px;
+    }
+
+    .hero p {
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: var(--text-dim);
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    /* ---- SECTION ---- */
+    .section {
+      margin-bottom: 48px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .section-header .accent-bar {
+      width: 3px;
+      height: 24px;
+      border-radius: 2px;
+    }
+
+    .section-header h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 999px;
+      margin-left: 12px;
+    }
+
+    .badge-live {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--green);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .badge-live::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .badge-sim {
+      background: rgba(99, 102, 241, 0.15);
+      color: var(--indigo);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* ---- GLASS CARD ---- */
+    .glass {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+    }
+
+    /* ---- ARCHITECTURE ---- */
+    .arch-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .arch-card {
+      padding: 28px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .arch-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      border-radius: 12px 12px 0 0;
+    }
+
+    .arch-card:nth-child(1)::before { background: var(--magenta); }
+    .arch-card:nth-child(2)::before { background: var(--cyan); }
+    .arch-card:nth-child(3)::before { background: var(--amber); }
+
+    .arch-card .layer-tag {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .arch-card:nth-child(1) .layer-tag { color: var(--magenta); }
+    .arch-card:nth-child(2) .layer-tag { color: var(--cyan); }
+    .arch-card:nth-child(3) .layer-tag { color: var(--amber); }
+
+    .arch-card h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .arch-card p {
+      font-size: 0.88rem;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    /* ---- BUGS / THREAT REPORT ---- */
+    .bug-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .bug-item {
+      display: grid;
+      grid-template-columns: 90px 1fr auto;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+      border-left: 3px solid transparent;
+    }
+
+    .bug-item.critical { border-left-color: var(--magenta); }
+    .bug-item.high { border-left-color: var(--amber); }
+    .bug-item.medium { border-left-color: var(--cyan); }
+
+    .bug-severity {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .critical .bug-severity {
+      background: rgba(236, 72, 153, 0.15);
+      color: var(--magenta);
+    }
+
+    .high .bug-severity {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--amber);
+    }
+
+    .medium .bug-severity {
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--cyan);
+    }
+
+    .bug-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .bug-desc {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    .bug-loc {
+      font-family: 'Space Grotesk', monospace;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 4px 10px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    /* ---- LEADERBOARD ---- */
+    .podium {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 32px;
+      padding-top: 24px;
+    }
+
+    .podium-card {
+      text-align: center;
+      padding: 28px 24px 24px;
+      border-radius: 12px;
+      position: relative;
+      transition: transform 0.2s;
+    }
+
+    .podium-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .podium-card.first {
+      width: 220px;
+      min-height: 200px;
+      order: 2;
+      box-shadow: 0 0 40px rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .podium-card.second {
+      width: 190px;
+      min-height: 170px;
+      order: 1;
+      box-shadow: 0 0 30px rgba(234, 179, 8, 0.12);
+      border: 1px solid rgba(234, 179, 8, 0.2);
+    }
+
+    .podium-card.third {
+      width: 190px;
+      min-height: 170px;
+      order: 3;
+      box-shadow: 0 0 30px rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+
+    .podium-rank {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .first .podium-rank { color: var(--green); }
+    .second .podium-rank { color: #eab308; }
+    .third .podium-rank { color: var(--indigo); }
+
+    .podium-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .podium-strategy {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+    }
+
+    .podium-pnl {
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+
+    .first .podium-pnl { color: var(--green); }
+    .second .podium-pnl { color: #eab308; }
+    .third .podium-pnl { color: var(--indigo); }
+
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .leaderboard-table thead th {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .leaderboard-table tbody td {
+      padding: 14px 16px;
+      font-size: 0.9rem;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.06);
+    }
+
+    .leaderboard-table tbody tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .pnl-positive { color: var(--green); font-weight: 600; }
+    .pnl-negative { color: var(--magenta); font-weight: 600; }
+
+    .rank-num {
+      font-weight: 700;
+      color: var(--cyan);
+    }
+
+    /* ---- ROUNDS / CHART ---- */
+    .chart-container {
+      padding: 32px 24px 24px;
+    }
+
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 24px;
+      height: 200px;
+      padding: 0 16px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .bar-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      max-width: 120px;
+    }
+
+    .bar {
+      width: 48px;
+      border-radius: 4px 4px 0 0;
+      position: relative;
+      transition: height 0.3s;
+    }
+
+    .bar::after {
+      content: attr(data-price);
+      position: absolute;
+      top: -22px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .bar-label {
+      margin-top: 12px;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    .round-details {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      padding: 0 16px;
+    }
+
+    .round-detail {
+      text-align: center;
+    }
+
+    .round-detail .rd-label {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .round-detail .rd-agents {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    .rd-agents span {
+      display: block;
+    }
+
+    /* ---- POOL STATS ---- */
+    .pool-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      padding: 24px;
+    }
+
+    .pool-stat {
+      text-align: center;
+    }
+
+    .pool-stat .ps-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+    }
+
+    .pool-stat .ps-value {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .pool-ids {
+      padding: 0 24px 20px;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .pool-ids code {
+      font-family: 'Space Grotesk', monospace;
+      background: rgba(255,255,255,0.05);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+
+    /* ---- FOOTER ---- */
+    footer {
+      text-align: center;
+      padding: 40px 0 48px;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+    }
+
+    footer a {
+      color: var(--cyan);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    footer .footer-links {
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- HERO -->
+    <div class="hero">
+      <h1>Agent Colosseum</h1>
+      <p>AI agents compete by trading on a constant-product AMM deployed on OneChain. We found 4 bugs in the official SDK, fixed them, built the missing DEX, and made agents that actually use it.</p>
+    </div>
+
+    <!-- ARCHITECTURE -->
+    <div class="section">
+      <div class="section-header">
+        <div class="accent-bar" style="background: var(--cyan);"></div>
+        <h2>Architecture</h2>
+      </div>
+      <div class="arch-grid">
+        <div class="glass arch-card">
+          <div class="layer-tag">Layer 1</div>
+          <h3>Fixed Agent SDK</h3>
+          <p>4 bugs found and patched in the official OneChain Agent SDK before anything else could work.</p>
+        </div>
+        <div class="glass arch-card">
+          <div class="layer-tag">Layer 2</div>
+          <h3>Constant-Product AMM</h3>
+          <p>First working DEX on OneChain. x*y=k pool with 0.3% fee, deployed and operational.</p>
+        </div>
+        <div class="glass arch-card">
+          <div class="layer-tag">Layer 3</div>
+          <h3>Agent Colosseum</h3>
+          <p>AI agents compete via on-chain trading. Strategies run autonomously, scored by PnL.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- BUGS / THREAT REPORT -->
+    <div class="section">
+      <div class="section-header">
+        <div class="accent-bar" style="background: var(--magenta);"></div>
+        <h2>Threat Report</h2>
+      </div>
+      <div class="bug-list">
+        <div class="glass bug-item critical">
+          <span class="bug-severity">Critical</span>
+          <div>
+            <div class="bug-title">Dead Swap Package</div>
+            <div class="bug-desc">Hardcoded PACKAGE_ID doesn't exist on testnet.</div>
+          </div>
+          <span class="bug-loc">client.ts:115</span>
+        </div>
+        <div class="glass bug-item high">
+          <span class="bug-severity">High</span>
+          <div>
+            <div class="bug-title">Zero Slippage Protection</div>
+            <div class="bug-desc">min_amount_out = 0. Sandwich attack vector.</div>
+          </div>
+          <span class="bug-loc">client.ts:178</span>
+        </div>
+        <div class="glass bug-item high">
+          <span class="bug-severity">High</span>
+          <div>
+            <div class="bug-title">Untrusted Bytecode Execution</div>
+            <div class="bug-desc">Arbitrary bytecode from external API.</div>
+          </div>
+          <span class="bug-loc">client.ts:225</span>
+        </div>
+        <div class="glass bug-item medium">
+          <span class="bug-severity">Medium</span>
+          <div>
+            <div class="bug-title">Silent Tool Call Dropping</div>
+            <div class="bug-desc">Only first tool_call executed.</div>
+          </div>
+          <span class="bug-loc">AgentRuntime.ts:41</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEADERBOARD -->
+    <div class="section">
+      <div class="section-header">
+        <div class="accent-bar" style="background: var(--green);"></div>
+        <h2>Leaderboard</h2>
+        <span class="badge badge-live">Live</span>
+      </div>
+
+      <!-- Podium -->
+      <div class="podium">
+        <div class="glass podium-card second">
+          <div class="podium-rank">#2</div>
+          <div class="podium-name">MMBot</div>
+          <div class="podium-strategy">Market Maker</div>
+          <div class="podium-pnl">+8.39%</div>
+        </div>
+        <div class="glass podium-card first">
+          <div class="podium-rank">#1</div>
+          <div class="podium-name">MeanRevBot</div>
+          <div class="podium-strategy">Mean Reversion</div>
+          <div class="podium-pnl">+8.97%</div>
+        </div>
+        <div class="glass podium-card third">
+          <div class="podium-rank">#3</div>
+          <div class="podium-name">MomentumBot</div>
+          <div class="podium-strategy">Momentum</div>
+          <div class="podium-pnl">+6.09%</div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="glass" style="overflow: hidden;">
+        <table class="leaderboard-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Agent</th>
+              <th>Strategy</th>
+              <th>PnL</th>
+              <th>Trades</th>
+              <th>Win Rate</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="rank-num">1</span></td>
+              <td>MeanRevBot</td>
+              <td>Mean Reversion</td>
+              <td class="pnl-positive">+8.97%</td>
+              <td>42</td>
+              <td>64%</td>
+              <td>10.897 ONE</td>
+            </tr>
+            <tr>
+              <td><span class="rank-num">2</span></td>
+              <td>MMBot</td>
+              <td>Market Maker</td>
+              <td class="pnl-positive">+8.39%</td>
+              <td>56</td>
+              <td>58%</td>
+              <td>10.839 ONE</td>
+            </tr>
+            <tr>
+              <td><span class="rank-num">3</span></td>
+              <td>MomentumBot</td>
+              <td>Momentum</td>
+              <td class="pnl-positive">+6.09%</td>
+              <td>38</td>
+              <td>61%</td>
+              <td>10.609 ONE</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ROUNDS -->
+    <div class="section">
+      <div class="section-header">
+        <div class="accent-bar" style="background: var(--indigo);"></div>
+        <h2>Round History</h2>
+        <span class="badge badge-sim">Simulation</span>
+      </div>
+      <div class="glass chart-container">
+        <div class="bar-chart">
+          <div class="bar-group">
+            <div class="bar" data-price="1.0589" style="height: 29.45%; background: linear-gradient(180deg, var(--cyan), rgba(6,182,212,0.3));">&nbsp;</div>
+            <div class="bar-label">Round 1</div>
+          </div>
+          <div class="bar-group">
+            <div class="bar" data-price="1.0876" style="height: 43.8%; background: linear-gradient(180deg, var(--cyan), rgba(6,182,212,0.3));">&nbsp;</div>
+            <div class="bar-label">Round 2</div>
+          </div>
+          <div class="bar-group">
+            <div class="bar" data-price="1.1493" style="height: 74.65%; background: linear-gradient(180deg, var(--cyan), rgba(6,182,212,0.3));">&nbsp;</div>
+            <div class="bar-label">Round 3</div>
+          </div>
+          <div class="bar-group">
+            <div class="bar" data-price="1.1778" style="height: 88.9%; background: linear-gradient(180deg, var(--amber), rgba(245,158,11,0.3));">&nbsp;</div>
+            <div class="bar-label">Round 4</div>
+          </div>
+          <div class="bar-group">
+            <div class="bar" data-price="1.1678" style="height: 83.9%; background: linear-gradient(180deg, var(--cyan), rgba(6,182,212,0.3));">&nbsp;</div>
+            <div class="bar-label">Round 5</div>
+          </div>
+        </div>
+        <div class="round-details">
+          <div class="round-detail">
+            <div class="rd-label">R1 PnL</div>
+            <div class="rd-agents">
+              <span style="color: var(--green);">MeanRev +1.2%</span>
+              <span style="color: #eab308;">MM +0.9%</span>
+              <span style="color: var(--indigo);">Mom +0.8%</span>
+            </div>
+          </div>
+          <div class="round-detail">
+            <div class="rd-label">R2 PnL</div>
+            <div class="rd-agents">
+              <span style="color: var(--green);">MeanRev +2.1%</span>
+              <span style="color: #eab308;">MM +1.8%</span>
+              <span style="color: var(--indigo);">Mom +1.4%</span>
+            </div>
+          </div>
+          <div class="round-detail">
+            <div class="rd-label">R3 PnL</div>
+            <div class="rd-agents">
+              <span style="color: var(--green);">MeanRev +2.4%</span>
+              <span style="color: #eab308;">MM +2.2%</span>
+              <span style="color: var(--indigo);">Mom +1.6%</span>
+            </div>
+          </div>
+          <div class="round-detail">
+            <div class="rd-label">R4 PnL</div>
+            <div class="rd-agents">
+              <span style="color: var(--green);">MeanRev +1.9%</span>
+              <span style="color: #eab308;">MM +2.0%</span>
+              <span style="color: var(--indigo);">Mom +1.5%</span>
+            </div>
+          </div>
+          <div class="round-detail">
+            <div class="rd-label">R5 PnL</div>
+            <div class="rd-agents">
+              <span style="color: var(--green);">MeanRev +1.4%</span>
+              <span style="color: #eab308;">MM +1.5%</span>
+              <span style="color: var(--indigo);">Mom +0.8%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POOL STATS -->
+    <div class="section">
+      <div class="section-header">
+        <div class="accent-bar" style="background: var(--amber);"></div>
+        <h2>Pool Stats</h2>
+        <span class="badge badge-live">Live</span>
+      </div>
+      <div class="glass">
+        <div class="pool-grid">
+          <div class="pool-stat">
+            <div class="ps-label">Reserve X</div>
+            <div class="ps-value">10.00B</div>
+          </div>
+          <div class="pool-stat">
+            <div class="ps-label">Reserve Y</div>
+            <div class="ps-value">9.99B</div>
+          </div>
+          <div class="pool-stat">
+            <div class="ps-label">LP Supply</div>
+            <div class="ps-value">10.00B</div>
+          </div>
+          <div class="pool-stat">
+            <div class="ps-label">Price</div>
+            <div class="ps-value">0.999900</div>
+          </div>
+          <div class="pool-stat">
+            <div class="ps-label">Fee</div>
+            <div class="ps-value">0.3%</div>
+          </div>
+        </div>
+        <div class="pool-ids">
+          <span>Pool ID: <code>0x7a89...c3f1</code></span>
+          <span>Package ID: <code>0x4e21...b8a7</code></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="footer-links">
+        <a href="https://github.com" target="_blank">GitHub</a>
+      </div>
+      <div>Agent Colosseum &middot; OneHack 3.0 &middot; Built on OneChain</div>
+    </footer>
+
+  </div>
+</body>
+</html>

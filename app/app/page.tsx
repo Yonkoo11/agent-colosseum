@@ -3,83 +3,60 @@
 import { useEffect, useState } from "react"
 import { fetchPoolData, PoolData, POOL_ID, AMM_PACKAGE, fetchAgents, AgentData } from "./chain"
 
-const AGENTS = [
-  {
-    name: "MomentumBot",
-    strategy: "Momentum",
-    pnl: 6.09,
-    trades: 4,
-    wins: 2,
-    balance_x: 31641,
-    balance_y: 175224,
-    color: "#6366f1",
-  },
-  {
-    name: "MeanRevBot",
-    strategy: "Mean Reversion",
-    pnl: 8.97,
-    trades: 5,
-    wins: 3,
-    balance_x: 143825,
-    balance_y: 49976,
-    color: "#22c55e",
-  },
-  {
-    name: "MMBot",
-    strategy: "Market Maker",
-    pnl: 8.39,
-    trades: 0,
-    wins: 1,
-    balance_x: 100000,
-    balance_y: 100000,
-    color: "#eab308",
-  },
+const STATIC_AGENTS = [
+  { name: "MeanRevBot", strategy: "Mean Reversion", pnl: 8.97, trades: 5, wins: 3 },
+  { name: "MMBot", strategy: "Market Maker", pnl: 8.39, trades: 0, wins: 1 },
+  { name: "MomentumBot", strategy: "Momentum", pnl: 6.09, trades: 4, wins: 2 },
 ]
 
 const BUGS = [
   {
-    id: 1,
-    severity: "Critical",
+    severity: "critical" as const,
+    label: "Critical",
     title: "Dead Swap Package",
-    file: "client.ts:115",
-    description: "Hardcoded PACKAGE_ID doesn't exist on testnet. Every swap fails.",
-    badgeClass: "badge-red",
+    location: "client.ts:115",
+    desc: "Hardcoded PACKAGE_ID doesn't exist on testnet.",
+    removed: '- const PACKAGE_ID = "0x688..."  // hardcoded, doesn\'t exist',
+    added: "+ constructor({ ammPackageId }: Options)  // configurable",
   },
   {
-    id: 2,
-    severity: "High",
-    title: "Zero Slippage Protection",
-    file: "client.ts:178",
-    description: "min_amount_out = 0. Agents are vulnerable to sandwich attacks.",
-    badgeClass: "badge-red",
+    severity: "high" as const,
+    label: "High",
+    title: "Zero Slippage",
+    location: "client.ts:178",
+    desc: "min_amount_out = 0. Sandwich attack vector.",
+    removed: "- tx.pure.u64(0)  // zero slippage",
+    added: "+ tx.pure.u64(minAmountOut)  // required param",
   },
   {
-    id: 3,
-    severity: "High",
-    title: "Untrusted Bytecode Execution",
-    file: "client.ts:225",
-    description: "deployCoin publishes arbitrary bytecode from an external API.",
-    badgeClass: "badge-yellow",
+    severity: "high" as const,
+    label: "High",
+    title: "Untrusted Bytecode",
+    location: "client.ts:225",
+    desc: "Arbitrary bytecode from external API.",
+    removed: "- const { bytecode } = await fetch(EXTERNAL_API)",
+    added: "+ // Removed: local Move compilation instead",
   },
   {
-    id: 4,
-    severity: "Medium",
-    title: "Silent Tool Call Dropping",
-    file: "AgentRuntime.ts:41",
-    description: "Only first tool_call executed. Rest silently ignored.",
-    badgeClass: "badge-yellow",
+    severity: "medium" as const,
+    label: "Medium",
+    title: "Tool Call Dropping",
+    location: "AgentRuntime.ts:41",
+    desc: "Only first tool_call executed.",
+    removed: "- const toolCall = message.tool_calls[0]",
+    added: "+ for (const toolCall of message.tool_calls)",
   },
 ]
 
 const ROUNDS = [
-  { round: 1, price: 1.0589, momentum: 6.09, meanrev: 2.94, mm: 2.95 },
-  { round: 2, price: 1.0876, momentum: 3.95, meanrev: 4.44, mm: 4.38 },
-  { round: 3, price: 1.1493, momentum: 5.66, meanrev: 7.91, mm: 7.47 },
-  { round: 4, price: 1.1778, momentum: 6.25, meanrev: 9.66, mm: 8.89 },
-  { round: 5, price: 1.1678, momentum: 6.09, meanrev: 8.97, mm: 8.39 },
+  { round: 1, price: 1.0589, mom: 6.1, mr: 2.9, mm: 3.0 },
+  { round: 2, price: 1.0876, mom: 4.0, mr: 4.4, mm: 4.4 },
+  { round: 3, price: 1.1493, mom: 5.7, mr: 7.9, mm: 7.5 },
+  { round: 4, price: 1.1778, mom: 6.3, mr: 9.7, mm: 8.9 },
+  { round: 5, price: 1.1678, mom: 6.1, mr: 9.0, mm: 8.4 },
 ]
 
-function formatBigNumber(n: number): string {
+function formatBig(n: number): string {
   if (n >= 1e18) return (n / 1e18).toFixed(2) + "B"
   if (n >= 1e15) return (n / 1e15).toFixed(2) + "M"
   if (n >= 1e12) return (n / 1e12).toFixed(2) + "K"
@@ -87,459 +64,323 @@ function formatBigNumber(n: number): string {
   return n.toLocaleString()
 }
 
+// Bar height: normalize price to 0-100% range based on min/max
+function barHeight(price: number): number {
+  const min = 1.0
+  const max = 1.2
+  return Math.max(10, Math.min(100, ((price - min) / (max - min)) * 100))
+}
+
 export default function Home() {
   const [pool, setPool] = useState<PoolData | null>(null)
   const [poolLive, setPoolLive] = useState(false)
-  const [agents, setAgents] = useState<AgentData[]>([])
+  const [liveAgents, setLiveAgents] = useState<AgentData[]>([])
   const [agentsLive, setAgentsLive] = useState(false)
 
   useEffect(() => {
     fetchPoolData().then((data) => {
-      if (data) {
-        setPool(data)
-        setPoolLive(true)
-      }
+      if (data) { setPool(data); setPoolLive(true) }
     })
     fetchAgents().then((data) => {
-      if (data.length > 0) {
-        setAgents(data)
-        setAgentsLive(true)
-      }
+      if (data.length > 0) { setLiveAgents(data); setAgentsLive(true) }
     })
   }, [])
 
-  // Use live agents if available, fall back to static
-  const displayAgents = agentsLive
-    ? agents.map((a) => ({
-        name: a.name,
-        strategy: a.strategy,
-        pnl: a.initial_value > 0 ? (a.pnl / a.initial_value) * 100 : 0,
-        trades: a.trades,
-        wins: a.wins,
-        balance_x: a.balance_x,
-        balance_y: a.balance_y,
-        color: a.color,
-      }))
-    : AGENTS
-  const sorted = [...displayAgents].sort((a, b) => b.pnl - a.pnl)
+  // Resolve display agents: live or static fallback
+  const agents = agentsLive
+    ? liveAgents
+        .map((a) => ({
+          name: a.name,
+          strategy: a.strategy,
+          pnl: a.initial_value > 0 ? (a.pnl / a.initial_value) * 100 : 0,
+          trades: a.trades,
+          wins: a.wins,
+        }))
+        .sort((a, b) => b.pnl - a.pnl)
+    : STATIC_AGENTS
 
-  const poolStats = pool
-    ? [
-        { label: "Reserve X (COLA)", value: formatBigNumber(pool.reserve_x) },
-        { label: "Reserve Y (WATER)", value: formatBigNumber(pool.reserve_y) },
-        { label: "LP Supply", value: formatBigNumber(pool.lp_supply) },
-        { label: "Price (WATER/COLA)", value: pool.price.toFixed(6) },
-        { label: "Fee", value: `${(pool.fee_bps / 100).toFixed(1)}%` },
-      ]
-    : [
-        { label: "Reserve X (COLA)", value: "Loading..." },
-        { label: "Reserve Y (WATER)", value: "Loading..." },
-        { label: "LP Supply", value: "Loading..." },
-        { label: "Price", value: "Loading..." },
-        { label: "Fee", value: "0.3%" },
-      ]
+  const first = agents[0]
+  const rest = agents.slice(1)
 
   return (
-    <main
-      style={{
-        maxWidth: 1100,
-        margin: "0 auto",
-        padding: "48px 24px",
-      }}
-    >
-      {/* Header */}
-      <div style={{ marginBottom: 48 }}>
-        <h1
-          style={{
-            fontSize: 36,
-            fontWeight: 700,
-            letterSpacing: "-0.03em",
-            marginBottom: 8,
-          }}
-        >
-          Agent Colosseum
-        </h1>
-        <p style={{ color: "var(--text-secondary)", fontSize: 16, maxWidth: 640 }}>
-          AI agents compete by trading on a constant-product AMM deployed on
-          OneChain. We found 4 bugs in the official SDK, fixed them, built the
-          missing DEX, and made agents that actually use it.
-        </p>
-      </div>
+    <>
+      {/* ======== Navigation ======== */}
+      <nav className="nav" role="navigation" aria-label="Primary">
+        <div className="nav__inner">
+          <a href="#architecture" className="nav__link">Architecture</a>
+          <a href="#bugs" className="nav__link">Bugs</a>
+          <a href="#leaderboard" className="nav__link">Leaderboard</a>
+          <a href="#rounds" className="nav__link">Rounds</a>
+          <a href="#pool" className="nav__link">Pool</a>
+        </div>
+      </nav>
 
-      {/* Architecture */}
-      <div className="card" style={{ marginBottom: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>
-          Architecture
-        </h2>
-        <div className="grid-arch">
-          {[
-            {
-              layer: "Layer 1",
-              title: "Fixed Agent SDK",
-              desc: "4 bugs found and patched in onechain-agent",
-            },
-            {
-              layer: "Layer 2",
-              title: "Constant-Product AMM",
-              desc: "First working DEX on OneChain testnet",
-            },
-            {
-              layer: "Layer 3",
-              title: "Agent Colosseum",
-              desc: "AI agents compete via on-chain trading",
-            },
-          ].map((item) => (
-            <div
-              key={item.layer}
-              style={{
-                padding: 16,
-                background: "var(--bg-secondary)",
-                borderRadius: 8,
-                border: "1px solid var(--border)",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "var(--accent)",
-                  textTransform: "uppercase" as const,
-                  letterSpacing: "0.08em",
-                  marginBottom: 6,
-                }}
-              >
-                {item.layer}
+      <main>
+        {/* ======== Hero (60/40 split) ======== */}
+        <section className="hero container" aria-label="Overview">
+          <div className="hero__grid">
+            <div>
+              <h1 className="hero__title">
+                Agent<br />Colosseum
+              </h1>
+              <p className="hero__desc">
+                AI agents compete by trading on a constant-product AMM deployed on
+                OneChain. We audited the official SDK, found 4 bugs, fixed them,
+                built the DEX, and put AI agents on it.
+              </p>
+              <p className="hero__tags">
+                Move &middot; TypeScript &middot; 39 Tests &middot; Sui Fork
+              </p>
+            </div>
+            <div className="hero__stats">
+              <div className="hero__stat">
+                <div className="hero__stat-number tabular">4</div>
+                <div className="hero__stat-label">bugs fixed</div>
               </div>
-              <div style={{ fontWeight: 600, marginBottom: 4 }}>
-                {item.title}
+              <div className="hero__stat">
+                <div className="hero__stat-number tabular">3</div>
+                <div className="hero__stat-label">AI agents</div>
               </div>
-              <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>
-                {item.desc}
+              <div className="hero__stat">
+                <div className="hero__stat-number tabular">39</div>
+                <div className="hero__stat-label">tests passing</div>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Bug Fixes */}
-      <div className="card" style={{ marginBottom: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>
-          Bugs Found & Fixed
-        </h2>
-        <div style={{ display: "grid", gap: 12 }}>
-          {BUGS.map((bug) => (
-            <div
-              key={bug.id}
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 12,
-                padding: 12,
-                background: "var(--bg-secondary)",
-                borderRadius: 8,
-              }}
-            >
-              <span className={`badge ${bug.badgeClass}`}>
-                {bug.severity}
-              </span>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600, marginBottom: 2 }}>
-                  #{bug.id}: {bug.title}
-                </div>
-                <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>
-                  {bug.description}
-                </div>
-              </div>
-              <code
-                style={{
-                  fontSize: 12,
-                  color: "var(--text-secondary)",
-                  whiteSpace: "nowrap" as const,
-                }}
-              >
-                {bug.file}
-              </code>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Leaderboard */}
-      <div className="card" style={{ marginBottom: 32 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 600 }}>
-            Agent Leaderboard
-          </h2>
-          {agentsLive && (
-            <span className="badge badge-green" style={{ fontSize: 11 }}>
-              LIVE
-            </span>
-          )}
-        </div>
-        <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 580 }}>
-          <thead>
-            <tr
-              style={{
-                borderBottom: "1px solid var(--border)",
-                fontSize: 12,
-                color: "var(--text-secondary)",
-                textTransform: "uppercase" as const,
-                letterSpacing: "0.06em",
-              }}
-            >
-              <th style={{ textAlign: "left", padding: "8px 0", fontWeight: 600 }}>
-                Rank
-              </th>
-              <th style={{ textAlign: "left", padding: "8px 0", fontWeight: 600 }}>
-                Agent
-              </th>
-              <th style={{ textAlign: "left", padding: "8px 0", fontWeight: 600 }}>
-                Strategy
-              </th>
-              <th style={{ textAlign: "right", padding: "8px 0", fontWeight: 600 }}>
-                PnL
-              </th>
-              <th style={{ textAlign: "right", padding: "8px 0", fontWeight: 600 }}>
-                Trades
-              </th>
-              <th style={{ textAlign: "right", padding: "8px 0", fontWeight: 600 }}>
-                Value
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {sorted.map((agent, i) => {
-              const price = pool ? pool.price : 1.0
-              const value = agent.balance_x * price + agent.balance_y
-              return (
-                <tr
-                  key={agent.name}
-                  style={{
-                    borderBottom: "1px solid var(--border)",
-                  }}
-                >
-                  <td
-                    style={{
-                      padding: "14px 0",
-                      fontWeight: 700,
-                      fontSize: 18,
-                      color: i === 0 ? "var(--green)" : "var(--text-secondary)",
-                    }}
-                  >
-                    {i + 1}
-                  </td>
-                  <td style={{ padding: "14px 0" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <div
-                        style={{
-                          width: 10,
-                          height: 10,
-                          borderRadius: "50%",
-                          background: agent.color,
-                        }}
-                      />
-                      <span style={{ fontWeight: 600 }}>{agent.name}</span>
-                    </div>
-                  </td>
-                  <td
-                    style={{
-                      padding: "14px 0",
-                      color: "var(--text-secondary)",
-                      fontSize: 14,
-                    }}
-                  >
-                    {agent.strategy}
-                  </td>
-                  <td
-                    style={{
-                      padding: "14px 0",
-                      textAlign: "right",
-                      fontWeight: 600,
-                      fontFeatureSettings: "'tnum'",
-                      color: agent.pnl >= 0 ? "var(--green)" : "var(--red)",
-                    }}
-                  >
-                    {agent.pnl >= 0 ? "+" : ""}
-                    {agent.pnl.toFixed(2)}%
-                  </td>
-                  <td
-                    style={{
-                      padding: "14px 0",
-                      textAlign: "right",
-                      fontFeatureSettings: "'tnum'",
-                    }}
-                  >
-                    {agent.trades}
-                  </td>
-                  <td
-                    style={{
-                      padding: "14px 0",
-                      textAlign: "right",
-                      fontFeatureSettings: "'tnum'",
-                    }}
-                  >
-                    {value.toLocaleString(undefined, {
-                      maximumFractionDigits: 0,
-                    })}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-        </div>
-      </div>
-
-      {/* Round History */}
-      <div className="card" style={{ marginBottom: 32 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 600 }}>
-            Competition Rounds
-          </h2>
-          <span className="badge badge-accent" style={{ fontSize: 11 }}>
-            SIMULATION
-          </span>
-        </div>
-        <div className="grid-rounds">
-          {ROUNDS.map((r) => (
-            <div
-              key={r.round}
-              style={{
-                padding: 14,
-                background: "var(--bg-secondary)",
-                borderRadius: 8,
-                border: "1px solid var(--border)",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "var(--text-secondary)",
-                  marginBottom: 8,
-                }}
-              >
-                ROUND {r.round}
-              </div>
-              <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 8, fontFeatureSettings: "'tnum'" }}>
-                {r.price.toFixed(4)}
-              </div>
-              <div style={{ fontSize: 12, color: "var(--text-secondary)", display: "grid", gap: 4 }}>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span>Momentum</span>
-                  <span style={{ color: "var(--accent)" }}>+{r.momentum.toFixed(1)}%</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span>MeanRev</span>
-                  <span style={{ color: "var(--green)" }}>+{r.meanrev.toFixed(1)}%</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span>MM</span>
-                  <span style={{ color: "var(--yellow)" }}>+{r.mm.toFixed(1)}%</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Pool Stats — LIVE from testnet */}
-      <div className="card" style={{ marginBottom: 32 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 600 }}>
-            AMM Pool: COLA / WATER
-          </h2>
-          {poolLive && (
-            <span className="badge badge-green" style={{ fontSize: 11 }}>
-              LIVE
-            </span>
-          )}
-        </div>
-        <div className="grid-stats">
-          {poolStats.map((stat) => (
-            <div key={stat.label}>
-              <div
-                style={{
-                  fontSize: 11,
-                  color: "var(--text-secondary)",
-                  textTransform: "uppercase" as const,
-                  letterSpacing: "0.06em",
-                  marginBottom: 4,
-                }}
-              >
-                {stat.label}
-              </div>
-              <div style={{ fontSize: 18, fontWeight: 600, fontFeatureSettings: "'tnum'" }}>
-                {stat.value}
-              </div>
-            </div>
-          ))}
-        </div>
-        {poolLive && (
-          <div style={{ marginTop: 16, fontSize: 12, color: "var(--text-secondary)" }}>
-            Pool ID:{" "}
-            <code style={{ fontSize: 11 }}>{POOL_ID.slice(0, 10)}...{POOL_ID.slice(-8)}</code>
-            {" | "}
-            Package:{" "}
-            <code style={{ fontSize: 11 }}>{AMM_PACKAGE.slice(0, 10)}...{AMM_PACKAGE.slice(-8)}</code>
           </div>
-        )}
-      </div>
+        </section>
 
-      {/* Verify On-Chain */}
-      <div className="card" style={{ marginBottom: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>
-          Verify On-Chain
-        </h2>
-        <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>
-          Every claim on this page can be verified directly against the OneChain testnet RPC.
-          Copy-paste these commands to check:
-        </p>
-        <div style={{ display: "grid", gap: 12 }}>
-          {[
-            { label: "Pool reserves", id: POOL_ID },
-            { label: "MomentumBot profile", id: "0x7f707c63d0fde46a2ec3cd12c7919b342b5ab9a6a1787cff3a6aec99e3cec8cd" },
-            { label: "Arena state", id: "0xf9830ccbce88ce83198b6bd36fe50fb2b6ac102d1b2ea07b8fa61df74264a813" },
-          ].map((item) => (
-            <div key={item.label} style={{ background: "var(--bg-secondary)", borderRadius: 8, padding: 12 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>{item.label}</div>
-              <code style={{
-                fontSize: 11,
-                color: "var(--text-secondary)",
-                display: "block",
-                whiteSpace: "pre-wrap" as const,
-                wordBreak: "break-all" as const,
-                lineHeight: 1.5,
-              }}>
-                {`curl -s https://rpc-testnet.onelabs.cc -H 'Content-Type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"sui_getObject","params":["${item.id}",{"showContent":true}]}' | python3 -m json.tool`}
-              </code>
+        {/* ======== Architecture (staircase) ======== */}
+        <section id="architecture" className="architecture container" aria-label="Architecture">
+          <div className="section-marker">
+            <span className="section-marker__bar" />
+            <span className="section-marker__text">Architecture</span>
+          </div>
+
+          <div className="arch-row arch-row--1">
+            <span className="arch-row__num">01</span>
+            <div>
+              <h3 className="arch-row__title">Fixed Agent SDK</h3>
+              <p className="arch-row__desc">4 bugs found and patched in onechain-agent</p>
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
+          <div className="arch-row arch-row--2">
+            <span className="arch-row__num">02</span>
+            <div>
+              <h3 className="arch-row__title">Constant-Product AMM</h3>
+              <p className="arch-row__desc">First working DEX on OneChain. x*y=k with 0.3% fee</p>
+            </div>
+          </div>
+          <div className="arch-row arch-row--3">
+            <span className="arch-row__num">03</span>
+            <div>
+              <h3 className="arch-row__title">Agent Colosseum</h3>
+              <p className="arch-row__desc">AI agents compete, scored by PnL</p>
+            </div>
+          </div>
+        </section>
 
-      {/* Footer */}
-      <div
-        style={{
-          textAlign: "center",
-          padding: "24px 0",
-          color: "var(--text-secondary)",
-          fontSize: 13,
-        }}
-      >
+        {/* ======== Bugs ======== */}
+        <section id="bugs" className="bugs container" aria-label="Bug report">
+          <div className="section-marker">
+            <span className="section-marker__bar" />
+            <span className="section-marker__text">Threat Report &mdash; 4 Bugs</span>
+          </div>
+
+          {BUGS.map((bug) => (
+            <article className="bug" key={bug.title}>
+              <div className={`bug__severity bug__severity--${bug.severity}`}>
+                {bug.label}
+              </div>
+              <div>
+                <h3 className="bug__title">{bug.title}</h3>
+                <p className="bug__location">{bug.location}</p>
+                <p className="bug__desc">{bug.desc}</p>
+                <div className="bug__diff">
+                  <code>
+                    <span className="diff-remove">{bug.removed}</span>
+                    {"\n"}
+                    <span className="diff-add">{bug.added}</span>
+                  </code>
+                </div>
+              </div>
+            </article>
+          ))}
+        </section>
+
+        {/* ======== Leaderboard (asymmetric) ======== */}
+        <section id="leaderboard" className="leaderboard container" aria-label="Leaderboard">
+          <div className="section-marker">
+            <span className="section-marker__bar" />
+            <span className="section-marker__text">Leaderboard</span>
+            {agentsLive && <span className="pulse-dot" aria-label="Live data" />}
+          </div>
+
+          {/* #1 — large treatment */}
+          <article className="leader-first">
+            <h3 className="leader-first__name">{first.name}</h3>
+            <div className="leader-first__pnl">
+              {first.pnl >= 0 ? "+" : ""}{first.pnl.toFixed(2)}%
+            </div>
+            <p className="leader-first__meta">
+              {first.trades} trades &middot; {first.wins} wins
+            </p>
+            <p className="leader-first__strategy">{first.strategy}</p>
+          </article>
+
+          {/* #2 and #3 — side by side */}
+          <div className="leader-rest">
+            {rest.map((agent, i) => (
+              <article className="leader-card" key={agent.name}>
+                <div className="leader-card__rank">#{i + 2}</div>
+                <h3 className="leader-card__name">{agent.name}</h3>
+                <div className="leader-card__pnl">{agent.pnl >= 0 ? "+" : ""}{agent.pnl.toFixed(2)}%</div>
+                <p className="leader-card__meta">
+                  {agent.trades} trades &middot; {agent.wins} wins
+                </p>
+                <p className="leader-card__strategy">{agent.strategy}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* ======== Rounds (bar chart) ======== */}
+        <section id="rounds" className="rounds container" aria-label="Round history">
+          <div className="section-marker">
+            <span className="section-marker__bar" />
+            <span className="section-marker__text">Rounds</span>
+          </div>
+
+          <div className="chart-bars">
+            {ROUNDS.map((r) => (
+              <div className="chart-bar-group" key={r.round}>
+                <span className="chart-price">{r.price.toFixed(4)}</span>
+                <div
+                  className="chart-bar"
+                  style={{ height: `${barHeight(r.price)}%` }}
+                />
+                <span className="chart-round-label">R{r.round}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="round-pnl-table">
+            {ROUNDS.map((r) => (
+              <div className="round-pnl-row" key={r.round}>
+                <span>R{r.round}</span>
+                Mom +{r.mom.toFixed(1)}% &middot; MeanRev +{r.mr.toFixed(1)}% &middot; MM +{r.mm.toFixed(1)}%
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ======== Pool Stats ======== */}
+        <section id="pool" className="pool container" aria-label="Pool statistics">
+          <div className="section-marker">
+            <span className="section-marker__bar" />
+            <span className="section-marker__text">Pool</span>
+            {poolLive && <span className="pulse-dot" aria-label="Live data" />}
+          </div>
+
+          <div className="pool__stats">
+            {pool ? (
+              <>
+                <div>
+                  <div className="pool__stat-value tabular">{formatBig(pool.reserve_x)}</div>
+                  <div className="pool__stat-label">Reserve X (COLA)</div>
+                </div>
+                <div>
+                  <div className="pool__stat-value tabular">{formatBig(pool.reserve_y)}</div>
+                  <div className="pool__stat-label">Reserve Y (WATER)</div>
+                </div>
+                <div>
+                  <div className="pool__stat-value tabular">{formatBig(pool.lp_supply)}</div>
+                  <div className="pool__stat-label">LP Supply</div>
+                </div>
+                <div>
+                  <div className="pool__stat-value tabular">{pool.price.toFixed(6)}</div>
+                  <div className="pool__stat-label">Price</div>
+                </div>
+                <div>
+                  <div className="pool__stat-value tabular">{(pool.fee_bps / 100).toFixed(1)}%</div>
+                  <div className="pool__stat-label">Fee</div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <div className="pool__stat-value skeleton" style={{ width: 80, height: 24 }}>&nbsp;</div>
+                  <div className="pool__stat-label">Reserve X</div>
+                </div>
+                <div>
+                  <div className="pool__stat-value skeleton" style={{ width: 80, height: 24 }}>&nbsp;</div>
+                  <div className="pool__stat-label">Reserve Y</div>
+                </div>
+                <div>
+                  <div className="pool__stat-value skeleton" style={{ width: 80, height: 24 }}>&nbsp;</div>
+                  <div className="pool__stat-label">LP Supply</div>
+                </div>
+                <div>
+                  <div className="pool__stat-value skeleton" style={{ width: 80, height: 24 }}>&nbsp;</div>
+                  <div className="pool__stat-label">Price</div>
+                </div>
+                <div>
+                  <div className="pool__stat-value tabular">0.3%</div>
+                  <div className="pool__stat-label">Fee</div>
+                </div>
+              </>
+            )}
+          </div>
+
+          <p className="pool__ids">
+            Pool: {POOL_ID.slice(0, 10)}...{POOL_ID.slice(-7)}
+            {" \u00B7 "}
+            Package: {AMM_PACKAGE.slice(0, 10)}...{AMM_PACKAGE.slice(-7)}
+          </p>
+        </section>
+
+        {/* ======== Verify On-Chain ======== */}
+        <section className="verify container" aria-label="On-chain verification">
+          <details>
+            <summary>Verify on-chain &rarr;</summary>
+            <div className="verify__code">
+              <pre>
+                <span className="comment"># Pool reserves</span>{"\n"}
+                {`curl -s https://rpc-testnet.onelabs.cc -X POST \\
+  -H 'Content-Type: application/json' \\
+  -d '{"jsonrpc":"2.0","id":1,"method":"sui_getObject","params":["${POOL_ID}",{"showContent":true}]}' \\
+  | python3 -m json.tool`}
+                {"\n\n"}
+                <span className="comment"># MomentumBot profile</span>{"\n"}
+                {`curl -s https://rpc-testnet.onelabs.cc -X POST \\
+  -H 'Content-Type: application/json' \\
+  -d '{"jsonrpc":"2.0","id":1,"method":"sui_getObject","params":["0x7f707c63d0fde46a2ec3cd12c7919b342b5ab9a6a1787cff3a6aec99e3cec8cd",{"showContent":true}]}' \\
+  | python3 -m json.tool`}
+                {"\n\n"}
+                <span className="comment"># Arena state</span>{"\n"}
+                {`curl -s https://rpc-testnet.onelabs.cc -X POST \\
+  -H 'Content-Type: application/json' \\
+  -d '{"jsonrpc":"2.0","id":1,"method":"sui_getObject","params":["0xf9830ccbce88ce83198b6bd36fe50fb2b6ac102d1b2ea07b8fa61df74264a813",{"showContent":true}]}' \\
+  | python3 -m json.tool`}
+              </pre>
+            </div>
+          </details>
+        </section>
+      </main>
+
+      {/* ======== Footer ======== */}
+      <footer className="footer container">
+        <p className="footer__main">
+          Agent Colosseum &middot; OneHack 3.0 &middot; OneChain
+        </p>
         <a
           href="https://github.com/Yonkoo11/agent-colosseum"
+          className="footer__link"
           target="_blank"
           rel="noopener noreferrer"
-          style={{ color: "var(--accent)", textDecoration: "none" }}
         >
-          GitHub
+          GitHub &rarr;
         </a>
-        {" "}
-        &middot; Agent Colosseum &middot; OneHack 3.0 &middot; Built on OneChain (Sui
-        fork)
-      </div>
-    </main>
+      </footer>
+    </>
   )
 }

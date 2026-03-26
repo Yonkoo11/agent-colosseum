@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Colosseum</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #000000;
+    color: #ffffff;
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 80px 40px 120px;
+  }
+
+  /* ---- Header ---- */
+  .header { margin-bottom: 120px; }
+
+  .header h1 {
+    font-size: 56px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.05;
+    margin-bottom: 24px;
+  }
+
+  .header p {
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 1.7;
+    color: rgba(255,255,255,0.55);
+    max-width: 720px;
+  }
+
+  /* ---- Section ---- */
+  .section { margin-bottom: 100px; }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #3b82f6;
+    margin-bottom: 40px;
+  }
+
+  /* ---- Architecture Flow ---- */
+  .arch-flow {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  .arch-node {
+    flex: 1;
+  }
+
+  .arch-node-title {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+
+  .arch-node-desc {
+    font-size: 13px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.4);
+    line-height: 1.5;
+  }
+
+  .arch-arrow {
+    flex: 0 0 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 4px;
+    font-size: 18px;
+    color: rgba(255,255,255,0.15);
+    font-weight: 300;
+  }
+
+  /* ---- Bugs ---- */
+  .bug-row {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 24px;
+    padding: 20px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .bug-row:first-of-type {
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .severity {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 4px 0;
+    text-align: center;
+    border: 1px solid;
+    border-radius: 2px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 26px;
+  }
+
+  .severity--critical { color: #ef4444; border-color: rgba(239,68,68,0.4); }
+  .severity--high { color: #f97316; border-color: rgba(249,115,22,0.4); }
+  .severity--medium { color: #eab308; border-color: rgba(234,179,8,0.4); }
+
+  .bug-title {
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .bug-loc {
+    font-size: 12px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    color: rgba(255,255,255,0.25);
+    margin-bottom: 4px;
+  }
+
+  .bug-desc {
+    font-size: 13px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.5;
+  }
+
+  /* ---- Leaderboard ---- */
+  .lb-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 40px;
+  }
+
+  .live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #22c55e;
+  }
+
+  .live-dot {
+    width: 6px;
+    height: 6px;
+    background: #22c55e;
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .lb-row {
+    display: grid;
+    grid-template-columns: 32px 1fr 160px 100px 80px 80px;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .lb-row:first-of-type {
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .lb-row--top {
+    border-left: 2px solid #3b82f6;
+    padding-left: 16px;
+  }
+
+  .lb-rank {
+    font-size: 13px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.25);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .lb-name {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .lb-strategy {
+    font-size: 12px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.35);
+  }
+
+  .lb-pnl {
+    font-size: 22px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    text-align: right;
+  }
+
+  .lb-stat {
+    font-size: 13px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.4);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .lb-stat-label {
+    font-size: 10px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.2);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* ---- Rounds ---- */
+  .rounds-strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .round-cell {
+    background: #000000;
+    padding: 24px 20px;
+  }
+
+  .round-num {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.2);
+    margin-bottom: 12px;
+  }
+
+  .round-price {
+    font-size: 28px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+    color: #ffffff;
+  }
+
+  .round-agent {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 0;
+  }
+
+  .round-agent-name {
+    font-size: 11px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.35);
+  }
+
+  .round-agent-pnl {
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---- Pool Stats ---- */
+  .pool-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 48px;
+    margin-bottom: 32px;
+  }
+
+  .pool-stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+
+  .pool-stat-label {
+    font-size: 11px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.02em;
+  }
+
+  .pool-ids {
+    padding-top: 24px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .pool-id {
+    font-size: 12px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    color: rgba(255,255,255,0.2);
+    margin-bottom: 4px;
+  }
+
+  .pool-id span {
+    color: rgba(255,255,255,0.1);
+  }
+
+  /* ---- Footer ---- */
+  .footer {
+    margin-top: 120px;
+    padding-top: 40px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-text {
+    font-size: 12px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.2);
+  }
+
+  .footer-link {
+    font-size: 12px;
+    font-weight: 500;
+    color: #3b82f6;
+    text-decoration: none;
+    letter-spacing: 0.02em;
+  }
+
+  .footer-link:hover {
+    color: #60a5fa;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <header class="header">
+    <h1>Agent Colosseum</h1>
+    <p>AI agents compete by trading on a constant-product AMM deployed on OneChain. We found 4 bugs in the official SDK, fixed them, built the missing DEX, and made agents that actually use it.</p>
+  </header>
+
+  <!-- Architecture -->
+  <section class="section">
+    <div class="section-label">Architecture</div>
+    <div class="arch-flow">
+      <div class="arch-node">
+        <div class="arch-node-title">Fixed Agent SDK</div>
+        <div class="arch-node-desc">Patched 4 bugs in the official OneChain agent toolkit</div>
+      </div>
+      <div class="arch-arrow">&rarr;</div>
+      <div class="arch-node">
+        <div class="arch-node-title">Constant-Product AMM</div>
+        <div class="arch-node-desc">Custom DEX with x*y=k invariant and 0.3% swap fee</div>
+      </div>
+      <div class="arch-arrow">&rarr;</div>
+      <div class="arch-node">
+        <div class="arch-node-title">Agent Colosseum</div>
+        <div class="arch-node-desc">Three AI agents compete across 5 rounds of live trading</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bugs Found -->
+  <section class="section">
+    <div class="section-label">Bugs Found &mdash; 4</div>
+
+    <div class="bug-row">
+      <div><span class="severity severity--critical">Critical</span></div>
+      <div>
+        <div class="bug-title">Dead Swap Package</div>
+        <div class="bug-loc">client.ts:115</div>
+        <div class="bug-desc">Hardcoded PACKAGE_ID doesn't exist on testnet. Every swap fails.</div>
+      </div>
+    </div>
+
+    <div class="bug-row">
+      <div><span class="severity severity--high">High</span></div>
+      <div>
+        <div class="bug-title">Zero Slippage Protection</div>
+        <div class="bug-loc">client.ts:178</div>
+        <div class="bug-desc">min_amount_out = 0. Agents are vulnerable to sandwich attacks.</div>
+      </div>
+    </div>
+
+    <div class="bug-row">
+      <div><span class="severity severity--high">High</span></div>
+      <div>
+        <div class="bug-title">Untrusted Bytecode Execution</div>
+        <div class="bug-loc">client.ts:225</div>
+        <div class="bug-desc">deployCoin publishes arbitrary bytecode from an external API.</div>
+      </div>
+    </div>
+
+    <div class="bug-row">
+      <div><span class="severity severity--medium">Medium</span></div>
+      <div>
+        <div class="bug-title">Silent Tool Call Dropping</div>
+        <div class="bug-loc">AgentRuntime.ts:41</div>
+        <div class="bug-desc">Only first tool_call executed. Rest silently ignored.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Leaderboard -->
+  <section class="section">
+    <div class="lb-header">
+      <div class="section-label" style="margin-bottom:0">Leaderboard</div>
+      <div class="live-indicator"><span class="live-dot"></span> Live</div>
+    </div>
+
+    <div class="lb-row lb-row--top">
+      <div class="lb-rank">1</div>
+      <div>
+        <div class="lb-name">MeanRevBot</div>
+        <div class="lb-strategy">Mean Reversion</div>
+      </div>
+      <div class="lb-pnl" style="color:#22c55e">+8.97%</div>
+      <div class="lb-stat">5 <span class="lb-stat-label">trades</span></div>
+      <div class="lb-stat">3 <span class="lb-stat-label">wins</span></div>
+    </div>
+
+    <div class="lb-row">
+      <div class="lb-rank">2</div>
+      <div>
+        <div class="lb-name">MMBot</div>
+        <div class="lb-strategy">Market Maker</div>
+      </div>
+      <div class="lb-pnl" style="color:#eab308">+8.39%</div>
+      <div class="lb-stat">0 <span class="lb-stat-label">trades</span></div>
+      <div class="lb-stat">1 <span class="lb-stat-label">wins</span></div>
+    </div>
+
+    <div class="lb-row">
+      <div class="lb-rank">3</div>
+      <div>
+        <div class="lb-name">MomentumBot</div>
+        <div class="lb-strategy">Momentum</div>
+      </div>
+      <div class="lb-pnl" style="color:#6366f1">+6.09%</div>
+      <div class="lb-stat">4 <span class="lb-stat-label">trades</span></div>
+      <div class="lb-stat">2 <span class="lb-stat-label">wins</span></div>
+    </div>
+  </section>
+
+  <!-- Rounds -->
+  <section class="section">
+    <div class="section-label">Round History</div>
+    <div class="rounds-strip">
+
+      <div class="round-cell">
+        <div class="round-num">Round 1</div>
+        <div class="round-price">1.0589</div>
+        <div class="round-agent">
+          <span class="round-agent-name">Momentum</span>
+          <span class="round-agent-pnl" style="color:#6366f1">+6.1%</span>
+        </div>
+        <div class="round-agent">
+          <span class="round-agent-name">MeanRev</span>
+          <span class="round-agent-pnl" style="color:#22c55e">+2.9%</span>
+        </div>
+        <div class="round-agent">
+          <span class="round-agent-name">MM</span>
+          <span class="round-agent-pnl" style="color:#eab308">+3.0%</span>
+        </div>
+      </div>
+
+      <div class="round-cell">
+        <div class="round-num">Round 2</div>
+        <div class="round-price">1.0876</div>
+        <div class="round-agent">
+          <span class="round-agent-name">Momentum</span>
+          <span class="round-agent-pnl" style="color:#6366f1">+4.0%</span>
+        </div>
+        <div class="round-agent">
+          <span class="round-agent-name">MeanRev</span>
+          <span class="round-agent-pnl" style="color:#22c55e">+4.4%</span>
+        </div>
+        <div class="round-agent">
+          <span class="round-agent-name">MM</span>
+          <span class="round-agent-pnl" style="color:#eab308">+4.4%</span>
+        </div>
+      </div>
+
+      <div class="round-cell">
+        <div class="round-num">Round 3</div>
+        <div class="round-price">1.1493</div>
+        <div class="round-agent">
+          <span class="round-agent-name">Momentum</span>
+          <span class="round-agent-pnl" style="color:#6366f1">+5.7%</span>
+        </div>
+        <div class="round-agent">
+          <span class="round-agent-name">MeanRev</span>
+          <span class="round-agent-pnl" style="color:#22c55e">+7.9%</span>
+        </div>
+        <div class="round-agent">
+          <span class="round-agent-name">MM</span>
+          <span class="round-agent-pnl" style="color:#eab308">+7.5%</span>
+        </div>
+      </div>
+
+      <div class="round-cell">
+        <div class="round-num">Round 4</div>
+        <div class="round-price">1.1778</div>
+        <div class="round-agent">
+          <span class="round-agent-name">Momentum</span>
+          <span class="round-agent-pnl" style="color:#6366f1">+6.3%</span>
+        </div>
+        <div class="round-agent">
+          <span class="round-agent-name">MeanRev</span>
+          <span class="round-agent-pnl" style="color:#22c55e">+9.7%</span>
+        </div>
+        <div class="round-agent">
+          <span class="round-agent-name">MM</span>
+          <span class="round-agent-pnl" style="color:#eab308">+8.9%</span>
+        </div>
+      </div>
+
+      <div class="round-cell">
+        <div class="round-num">Round 5</div>
+        <div class="round-price">1.1678</div>
+        <div class="round-agent">
+          <span class="round-agent-name">Momentum</span>
+          <span class="round-agent-pnl" style="color:#6366f1">+6.1%</span>
+        </div>
+        <div class="round-agent">
+          <span class="round-agent-name">MeanRev</span>
+          <span class="round-agent-pnl" style="color:#22c55e">+9.0%</span>
+        </div>
+        <div class="round-agent">
+          <span class="round-agent-name">MM</span>
+          <span class="round-agent-pnl" style="color:#eab308">+8.4%</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Pool Stats -->
+  <section class="section">
+    <div class="section-label">Pool Stats</div>
+    <div class="pool-grid">
+      <div>
+        <div class="pool-stat-value">10.00B</div>
+        <div class="pool-stat-label">Reserve X (COLA)</div>
+      </div>
+      <div>
+        <div class="pool-stat-value">9.99B</div>
+        <div class="pool-stat-label">Reserve Y (WATER)</div>
+      </div>
+      <div>
+        <div class="pool-stat-value">10.00B</div>
+        <div class="pool-stat-label">LP Supply</div>
+      </div>
+      <div>
+        <div class="pool-stat-value">0.9999</div>
+        <div class="pool-stat-label">Price (WATER/COLA)</div>
+      </div>
+      <div>
+        <div class="pool-stat-value">0.3%</div>
+        <div class="pool-stat-label">Fee</div>
+      </div>
+    </div>
+    <div class="pool-ids">
+      <div class="pool-id"><span>Pool ID:</span> 0x790222dd...aeedecc</div>
+      <div class="pool-id"><span>Package:</span> 0xf5b9c384...c8392b7</div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-text">Agent Colosseum &middot; OneHack 3.0 &middot; Built on OneChain</div>
+    <a href="https://github.com" class="footer-link">GitHub &rarr;</a>
+  </footer>
+
+</div>
+</body>
+</html>

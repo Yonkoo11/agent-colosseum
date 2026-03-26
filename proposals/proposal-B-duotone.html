@@ -1,0 +1,1084 @@
+<!--
+  Agent Colosseum — Proposal B: Duotone
+  DNA Code: DNA-A-T-S-D-C
+  Layout: Asymmetric | Nav: Top-fixed | Hero: Split | Color: Duotone | Type: Space Grotesk
+
+  Design DNA:
+    A = Asymmetric layout (off-center, staircase, diagonal reading)
+    T = Top-fixed navigation (left-aligned, no logo)
+    S = Split hero (60/40, stat block offset)
+    D = Duotone palette (black + amber #D97706 only)
+    C = Custom typography (Space Grotesk 300-700)
+
+  Inspirations:
+    Primary: Swiss Design / International Typographic Style
+    Secondary: Balenciaga.com editorial tension
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Agent Colosseum — AI agents competing on a constant-product AMM on OneChain. Hackathon showcase for OneHack 3.0.">
+  <title>Agent Colosseum — Duotone</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ==============================
+       CSS Custom Properties
+       ============================== */
+    :root {
+      /* Colors — Duotone: black + amber */
+      --bg: #0c0c0c;
+      --surface: #161616;
+      --text-primary: #fafafa;
+      --text-secondary: rgba(255,255,255,0.45);
+      --text-tertiary: rgba(255,255,255,0.2);
+      --text-ghost: rgba(255,255,255,0.15);
+      --text-invisible: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.08);
+      --border-subtle: rgba(255,255,255,0.06);
+      --accent: #D97706;
+      --accent-dim: rgba(217,119,6,0.6);
+      --accent-faint: rgba(217,119,6,0.3);
+      --accent-ghost: rgba(217,119,6,0.2);
+      --severity-critical: #ef4444;
+      --severity-high: #D97706;
+      --severity-medium: rgba(255,255,255,0.5);
+      --diff-remove: rgba(239,68,68,0.5);
+      --diff-add: rgba(217,119,6,0.6);
+      --code-bg: #111111;
+
+      /* Typography */
+      --font: 'Space Grotesk', sans-serif;
+      --mono: 'Space Grotesk', monospace;
+
+      /* Spacing — 4px base */
+      --sp-1: 4px;
+      --sp-2: 8px;
+      --sp-3: 12px;
+      --sp-4: 16px;
+      --sp-5: 20px;
+      --sp-6: 24px;
+      --sp-8: 32px;
+      --sp-10: 40px;
+      --sp-12: 48px;
+      --sp-16: 64px;
+      --sp-20: 80px;
+
+      /* Radii — max 2 values */
+      --radius-none: 0px;
+      --radius-sm: 4px;
+
+      /* Motion */
+      --ease-out: ease-out;
+      --duration-fast: 150ms;
+      --duration-normal: 200ms;
+
+      /* Layout */
+      --nav-height: 44px;
+      --content-max: 960px;
+      --content-padding: var(--sp-6);
+    }
+
+    /* ==============================
+       Reset & Base
+       ============================== */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text-primary);
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.6;
+    }
+
+    /* ==============================
+       Reduced Motion
+       ============================== */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      html {
+        scroll-behavior: auto;
+      }
+    }
+
+    /* ==============================
+       Utility
+       ============================== */
+    .tabular {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .container {
+      max-width: var(--content-max);
+      margin: 0 auto;
+      padding-left: var(--content-padding);
+      padding-right: var(--content-padding);
+    }
+
+    /* ==============================
+       DNA Badge (fixed top-right)
+       ============================== */
+    .dna-badge {
+      position: fixed;
+      top: var(--sp-3);
+      right: var(--sp-3);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-primary);
+      background: rgba(0,0,0,0.8);
+      padding: var(--sp-1) var(--sp-2);
+      border-radius: var(--radius-sm);
+      z-index: 9999;
+      letter-spacing: 0.02em;
+      line-height: 1;
+    }
+
+    /* ==============================
+       1. Fixed Navigation
+       ============================== */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--nav-height);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border-subtle);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+
+    .nav__inner {
+      max-width: var(--content-max);
+      width: 100%;
+      margin: 0 auto;
+      padding-left: var(--content-padding);
+      padding-right: var(--content-padding);
+      display: flex;
+      align-items: center;
+      gap: var(--sp-8);
+    }
+
+    .nav__link {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.4);
+      text-decoration: none;
+      transition: color var(--duration-fast) var(--ease-out);
+      line-height: 1;
+    }
+
+    .nav__link:hover,
+    .nav__link:focus-visible {
+      color: var(--text-primary);
+    }
+
+    .nav__link:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 4px;
+      border-radius: var(--radius-sm);
+    }
+
+    /* ==============================
+       2. Hero — Split Asymmetric (60/40)
+       ============================== */
+    .hero {
+      padding-top: calc(var(--nav-height) + var(--sp-10));
+      padding-bottom: var(--sp-20);
+    }
+
+    .hero__grid {
+      display: grid;
+      grid-template-columns: 60% 40%;
+      gap: var(--sp-8);
+      align-items: start;
+    }
+
+    .hero__title {
+      font-size: 64px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      color: var(--text-primary);
+      margin-bottom: var(--sp-6);
+    }
+
+    .hero__desc {
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      max-width: 480px;
+      line-height: 1.7;
+      margin-bottom: var(--sp-5);
+    }
+
+    .hero__tags {
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 0.04em;
+    }
+
+    .hero__stats {
+      margin-top: -8px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hero__stat {
+      text-align: right;
+      padding: var(--sp-4) 0;
+      border-bottom: 1px solid var(--accent-ghost);
+    }
+
+    .hero__stat:last-child {
+      border-bottom: none;
+    }
+
+    .hero__stat-number {
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hero__stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.25);
+      letter-spacing: 0.06em;
+    }
+
+    /* ==============================
+       Section Marker
+       ============================== */
+    .section-marker {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      margin-bottom: var(--sp-10);
+    }
+
+    .section-marker__bar {
+      width: 3px;
+      height: 24px;
+      background: var(--accent);
+      border-radius: var(--radius-none);
+      flex-shrink: 0;
+    }
+
+    .section-marker__text {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: rgba(255,255,255,0.3);
+    }
+
+    /* Pulse dot */
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: inline-block;
+      margin-left: var(--sp-2);
+      animation: pulse 2s var(--ease-out) infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* ==============================
+       3. Architecture — Staircase
+       ============================== */
+    .architecture {
+      padding-bottom: var(--sp-20);
+    }
+
+    .arch-row {
+      display: flex;
+      align-items: baseline;
+      gap: var(--sp-4);
+      padding: var(--sp-5) 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .arch-row:last-child {
+      border-bottom: none;
+    }
+
+    .arch-row--1 { margin-left: 0; }
+    .arch-row--2 { margin-left: 15%; }
+    .arch-row--3 { margin-left: 30%; }
+
+    .arch-row__num {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+      flex-shrink: 0;
+      min-width: 20px;
+    }
+
+    .arch-row__content {
+      flex: 1;
+    }
+
+    .arch-row__title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--sp-1);
+    }
+
+    .arch-row__desc {
+      font-size: 13px;
+      color: rgba(255,255,255,0.35);
+      line-height: 1.5;
+    }
+
+    /* ==============================
+       4. Bugs Found
+       ============================== */
+    .bugs {
+      padding-bottom: var(--sp-20);
+    }
+
+    .bug {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      gap: var(--sp-4);
+      margin-bottom: var(--sp-8);
+    }
+
+    .bug:last-child {
+      margin-bottom: 0;
+    }
+
+    .bug__severity {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding-top: 3px;
+    }
+
+    .bug__severity--critical { color: var(--severity-critical); }
+    .bug__severity--high { color: var(--severity-high); }
+    .bug__severity--medium { color: var(--severity-medium); }
+
+    .bug__body {
+      min-width: 0;
+    }
+
+    .bug__title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--sp-1);
+    }
+
+    .bug__location {
+      font-size: 12px;
+      font-family: var(--mono);
+      color: var(--text-tertiary);
+      margin-bottom: var(--sp-2);
+    }
+
+    .bug__desc {
+      font-size: 13px;
+      color: rgba(255,255,255,0.4);
+      line-height: 1.5;
+      margin-bottom: var(--sp-3);
+    }
+
+    .bug__diff {
+      background: var(--code-bg);
+      border-left: 2px solid var(--border-subtle);
+      padding: var(--sp-3) var(--sp-4);
+      border-radius: var(--radius-none);
+      overflow-x: auto;
+    }
+
+    .bug__diff code {
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.7;
+      display: block;
+      white-space: pre;
+    }
+
+    .diff-remove {
+      color: var(--diff-remove);
+    }
+
+    .diff-add {
+      color: var(--diff-add);
+    }
+
+    .diff-context {
+      color: var(--text-tertiary);
+    }
+
+    /* ==============================
+       5. Leaderboard — Asymmetric
+       ============================== */
+    .leaderboard {
+      padding-bottom: var(--sp-20);
+    }
+
+    .leader-first {
+      border-left: 3px solid var(--accent);
+      background: var(--surface);
+      padding: var(--sp-6) var(--sp-8);
+      margin-bottom: var(--sp-6);
+      border-radius: var(--radius-none);
+    }
+
+    .leader-first__name {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: var(--sp-1);
+    }
+
+    .leader-first__pnl {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+      margin-bottom: var(--sp-2);
+    }
+
+    .leader-first__meta {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: var(--sp-1);
+    }
+
+    .leader-first__strategy {
+      font-size: 13px;
+      color: rgba(255,255,255,0.3);
+    }
+
+    .leader-rest {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--sp-6);
+    }
+
+    .leader-card {
+      padding: var(--sp-5) var(--sp-6);
+      border-top: 1px solid var(--border);
+    }
+
+    .leader-card__name {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--sp-1);
+    }
+
+    .leader-card__pnl {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+      margin-bottom: var(--sp-1);
+    }
+
+    .leader-card__meta {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: var(--sp-1);
+    }
+
+    .leader-card__strategy {
+      font-size: 12px;
+      color: rgba(255,255,255,0.3);
+    }
+
+    /* ==============================
+       6. Round History — Timeline
+       ============================== */
+    .rounds {
+      padding-bottom: var(--sp-20);
+    }
+
+    .timeline {
+      position: relative;
+      padding-left: var(--sp-10);
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 10px;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: var(--accent-faint);
+    }
+
+    .timeline__round {
+      position: relative;
+      padding-bottom: var(--sp-8);
+    }
+
+    .timeline__round:last-child {
+      padding-bottom: 0;
+    }
+
+    .timeline__dot {
+      position: absolute;
+      left: calc(-1 * var(--sp-10) + 8px);
+      top: 4px;
+      width: 5px;
+      height: 5px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+
+    .timeline__round--1 { margin-left: 0; }
+    .timeline__round--2 { margin-left: 5%; }
+    .timeline__round--3 { margin-left: 10%; }
+    .timeline__round--4 { margin-left: 15%; }
+    .timeline__round--5 { margin-left: 20%; }
+
+    .timeline__label {
+      font-size: 10px;
+      font-family: var(--mono);
+      color: var(--text-tertiary);
+      margin-bottom: var(--sp-1);
+      letter-spacing: 0.04em;
+    }
+
+    .timeline__price {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+      margin-bottom: var(--sp-1);
+    }
+
+    .timeline__agents {
+      font-size: 11px;
+      color: rgba(255,255,255,0.35);
+      line-height: 1.7;
+    }
+
+    /* ==============================
+       7. Pool Stats
+       ============================== */
+    .pool {
+      padding-bottom: var(--sp-20);
+    }
+
+    .pool__stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sp-10);
+      margin-bottom: var(--sp-6);
+    }
+
+    .pool__stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .pool__stat-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      letter-spacing: 0.06em;
+    }
+
+    .pool__ids {
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--text-ghost);
+      line-height: 1.8;
+      word-break: break-all;
+    }
+
+    /* ==============================
+       8. Verify On-Chain
+       ============================== */
+    .verify {
+      padding-bottom: var(--sp-20);
+    }
+
+    .verify details {
+      border: none;
+    }
+
+    .verify summary {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      cursor: pointer;
+      list-style: none;
+      padding: var(--sp-2) 0;
+    }
+
+    .verify summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .verify summary:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 4px;
+      border-radius: var(--radius-sm);
+    }
+
+    .verify__code {
+      background: var(--code-bg);
+      border-left: 2px solid var(--border-subtle);
+      padding: var(--sp-4);
+      margin-top: var(--sp-3);
+      overflow-x: auto;
+      border-radius: var(--radius-none);
+    }
+
+    .verify__code pre {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-tertiary);
+      line-height: 1.8;
+      white-space: pre;
+    }
+
+    .verify__code .comment {
+      color: rgba(255,255,255,0.3);
+    }
+
+    /* ==============================
+       9. Footer
+       ============================== */
+    .footer {
+      padding: var(--sp-12) 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .footer__main {
+      font-size: 11px;
+      color: var(--text-ghost);
+      margin-bottom: var(--sp-2);
+    }
+
+    .footer__link {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      text-decoration: none;
+      transition: color var(--duration-fast) var(--ease-out);
+      margin-bottom: var(--sp-3);
+      display: inline-block;
+    }
+
+    .footer__link:hover,
+    .footer__link:focus-visible {
+      color: var(--text-primary);
+    }
+
+    .footer__link:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 4px;
+      border-radius: var(--radius-sm);
+    }
+
+    .footer__inspiration {
+      font-size: 10px;
+      color: var(--text-invisible);
+      margin-top: var(--sp-3);
+    }
+
+    /* ==============================
+       Responsive
+       ============================== */
+    @media (max-width: 720px) {
+      :root {
+        --content-padding: var(--sp-4);
+      }
+
+      .hero__grid {
+        grid-template-columns: 1fr;
+        gap: var(--sp-10);
+      }
+
+      .hero__title {
+        font-size: 40px;
+      }
+
+      .hero__stats {
+        margin-top: 0;
+      }
+
+      .hero__stat {
+        text-align: left;
+      }
+
+      .hero__stat-number {
+        font-size: 36px;
+      }
+
+      .arch-row--2 { margin-left: 8%; }
+      .arch-row--3 { margin-left: 16%; }
+
+      .bug {
+        grid-template-columns: 1fr;
+        gap: var(--sp-2);
+      }
+
+      .leader-rest {
+        grid-template-columns: 1fr;
+      }
+
+      .leader-first {
+        padding: var(--sp-5) var(--sp-6);
+      }
+
+      .leader-first__name { font-size: 22px; }
+      .leader-first__pnl { font-size: 28px; }
+
+      .timeline__round--2 { margin-left: 0; }
+      .timeline__round--3 { margin-left: 0; }
+      .timeline__round--4 { margin-left: 0; }
+      .timeline__round--5 { margin-left: 0; }
+
+      .pool__stats {
+        gap: var(--sp-6);
+      }
+
+      .nav__inner {
+        gap: var(--sp-5);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- DNA Badge -->
+  <span class="dna-badge" aria-hidden="true">DNA-A-T-S-D-C</span>
+
+  <!-- 1. Fixed Navigation -->
+  <nav class="nav" role="navigation" aria-label="Primary">
+    <div class="nav__inner">
+      <a href="#architecture" class="nav__link">Architecture</a>
+      <a href="#bugs" class="nav__link">Bugs</a>
+      <a href="#leaderboard" class="nav__link">Leaderboard</a>
+      <a href="#pool" class="nav__link">Pool</a>
+    </div>
+  </nav>
+
+  <main>
+    <!-- 2. Hero — Split Asymmetric -->
+    <section class="hero container" aria-label="Overview">
+      <div class="hero__grid">
+        <div class="hero__left">
+          <h1 class="hero__title">
+            Agent<br>Colosseum
+          </h1>
+          <p class="hero__desc">
+            AI agents compete by trading on a constant-product AMM deployed on OneChain. We audited the official SDK, found 4 bugs, fixed them, built the DEX, and put AI agents on it.
+          </p>
+          <p class="hero__tags">Move &middot; TypeScript &middot; 39 Tests &middot; Sui Fork</p>
+        </div>
+        <div class="hero__stats">
+          <div class="hero__stat">
+            <div class="hero__stat-number tabular">4</div>
+            <div class="hero__stat-label">bugs fixed</div>
+          </div>
+          <div class="hero__stat">
+            <div class="hero__stat-number tabular">3</div>
+            <div class="hero__stat-label">AI agents</div>
+          </div>
+          <div class="hero__stat">
+            <div class="hero__stat-number tabular">39</div>
+            <div class="hero__stat-label">tests passing</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Architecture — Staircase -->
+    <section id="architecture" class="architecture container" aria-label="Architecture">
+      <div class="section-marker">
+        <span class="section-marker__bar"></span>
+        <span class="section-marker__text">Architecture</span>
+      </div>
+
+      <div class="arch-row arch-row--1">
+        <span class="arch-row__num">01</span>
+        <div class="arch-row__content">
+          <h3 class="arch-row__title">Fixed Agent SDK</h3>
+          <p class="arch-row__desc">4 bugs found and patched in onechain-agent</p>
+        </div>
+      </div>
+
+      <div class="arch-row arch-row--2">
+        <span class="arch-row__num">02</span>
+        <div class="arch-row__content">
+          <h3 class="arch-row__title">Constant-Product AMM</h3>
+          <p class="arch-row__desc">First working DEX on OneChain. x*y=k with 0.3% fee</p>
+        </div>
+      </div>
+
+      <div class="arch-row arch-row--3">
+        <span class="arch-row__num">03</span>
+        <div class="arch-row__content">
+          <h3 class="arch-row__title">Agent Colosseum</h3>
+          <p class="arch-row__desc">AI agents compete, scored by PnL</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Bugs Found -->
+    <section id="bugs" class="bugs container" aria-label="Bug report">
+      <div class="section-marker">
+        <span class="section-marker__bar"></span>
+        <span class="section-marker__text">Threat Report &mdash; 4 Bugs</span>
+      </div>
+
+      <!-- Bug 1 -->
+      <article class="bug">
+        <div class="bug__severity bug__severity--critical">Critical</div>
+        <div class="bug__body">
+          <h3 class="bug__title">Dead Swap Package</h3>
+          <p class="bug__location">client.ts:115</p>
+          <p class="bug__desc">Hardcoded PACKAGE_ID doesn't exist on testnet.</p>
+          <div class="bug__diff"><code><span class="diff-remove">- const PACKAGE_ID = "0x688..."  // hardcoded, doesn't exist</span>
+<span class="diff-add">+ constructor({ ammPackageId }: Options)  // configurable</span></code></div>
+        </div>
+      </article>
+
+      <!-- Bug 2 -->
+      <article class="bug">
+        <div class="bug__severity bug__severity--high">High</div>
+        <div class="bug__body">
+          <h3 class="bug__title">Zero Slippage</h3>
+          <p class="bug__location">client.ts:178</p>
+          <p class="bug__desc">min_amount_out = 0. Sandwich attack vector.</p>
+          <div class="bug__diff"><code><span class="diff-remove">- tx.pure.u64(0)  // zero slippage</span>
+<span class="diff-add">+ tx.pure.u64(minAmountOut)  // required param</span></code></div>
+        </div>
+      </article>
+
+      <!-- Bug 3 -->
+      <article class="bug">
+        <div class="bug__severity bug__severity--high">High</div>
+        <div class="bug__body">
+          <h3 class="bug__title">Untrusted Bytecode</h3>
+          <p class="bug__location">client.ts:225</p>
+          <p class="bug__desc">Arbitrary bytecode from external API.</p>
+          <div class="bug__diff"><code><span class="diff-remove">- const { bytecode } = await fetch(EXTERNAL_API)</span>
+<span class="diff-add">+ // Removed: local Move compilation instead</span></code></div>
+        </div>
+      </article>
+
+      <!-- Bug 4 -->
+      <article class="bug">
+        <div class="bug__severity bug__severity--medium">Medium</div>
+        <div class="bug__body">
+          <h3 class="bug__title">Tool Call Dropping</h3>
+          <p class="bug__location">AgentRuntime.ts:41</p>
+          <p class="bug__desc">Only first tool_call executed.</p>
+          <div class="bug__diff"><code><span class="diff-remove">- const toolCall = message.tool_calls[0]</span>
+<span class="diff-add">+ for (const toolCall of message.tool_calls)</span></code></div>
+        </div>
+      </article>
+    </section>
+
+    <!-- 5. Leaderboard -->
+    <section id="leaderboard" class="leaderboard container" aria-label="Leaderboard">
+      <div class="section-marker">
+        <span class="section-marker__bar"></span>
+        <span class="section-marker__text">Leaderboard</span>
+        <span class="pulse-dot" aria-hidden="true"></span>
+      </div>
+
+      <!-- #1 — Large treatment -->
+      <article class="leader-first">
+        <h3 class="leader-first__name">MeanRevBot</h3>
+        <div class="leader-first__pnl">+8.97%</div>
+        <p class="leader-first__meta tabular">5 trades &middot; 3 wins</p>
+        <p class="leader-first__strategy">Mean Reversion</p>
+      </article>
+
+      <!-- #2 and #3 — Side by side -->
+      <div class="leader-rest">
+        <article class="leader-card">
+          <h3 class="leader-card__name">MMBot</h3>
+          <div class="leader-card__pnl tabular">+8.39%</div>
+          <p class="leader-card__meta tabular">0 trades &middot; 1 win</p>
+          <p class="leader-card__strategy">Market Maker</p>
+        </article>
+
+        <article class="leader-card">
+          <h3 class="leader-card__name">MomentumBot</h3>
+          <div class="leader-card__pnl tabular">+6.09%</div>
+          <p class="leader-card__meta tabular">4 trades &middot; 2 wins</p>
+          <p class="leader-card__strategy">Momentum</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- 6. Round History — Timeline -->
+    <section class="rounds container" aria-label="Round history">
+      <div class="section-marker">
+        <span class="section-marker__bar"></span>
+        <span class="section-marker__text">Rounds</span>
+      </div>
+
+      <div class="timeline">
+        <div class="timeline__round timeline__round--1">
+          <span class="timeline__dot" aria-hidden="true"></span>
+          <div class="timeline__label">R1</div>
+          <div class="timeline__price tabular">1.0589</div>
+          <div class="timeline__agents">
+            Mom +6.1% &middot; MeanRev +2.9% &middot; MM +3.0%
+          </div>
+        </div>
+
+        <div class="timeline__round timeline__round--2">
+          <span class="timeline__dot" aria-hidden="true"></span>
+          <div class="timeline__label">R2</div>
+          <div class="timeline__price tabular">1.0876</div>
+          <div class="timeline__agents">
+            Mom +4.0% &middot; MeanRev +4.4% &middot; MM +4.4%
+          </div>
+        </div>
+
+        <div class="timeline__round timeline__round--3">
+          <span class="timeline__dot" aria-hidden="true"></span>
+          <div class="timeline__label">R3</div>
+          <div class="timeline__price tabular">1.1493</div>
+          <div class="timeline__agents">
+            Mom +5.7% &middot; MeanRev +7.9% &middot; MM +7.5%
+          </div>
+        </div>
+
+        <div class="timeline__round timeline__round--4">
+          <span class="timeline__dot" aria-hidden="true"></span>
+          <div class="timeline__label">R4</div>
+          <div class="timeline__price tabular">1.1778</div>
+          <div class="timeline__agents">
+            Mom +6.3% &middot; MeanRev +9.7% &middot; MM +8.9%
+          </div>
+        </div>
+
+        <div class="timeline__round timeline__round--5">
+          <span class="timeline__dot" aria-hidden="true"></span>
+          <div class="timeline__label">R5</div>
+          <div class="timeline__price tabular">1.1678</div>
+          <div class="timeline__agents">
+            Mom +6.1% &middot; MeanRev +9.0% &middot; MM +8.4%
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. Pool Stats -->
+    <section id="pool" class="pool container" aria-label="Pool statistics">
+      <div class="section-marker">
+        <span class="section-marker__bar"></span>
+        <span class="section-marker__text">Pool</span>
+        <span class="pulse-dot" aria-hidden="true"></span>
+      </div>
+
+      <div class="pool__stats">
+        <div>
+          <div class="pool__stat-value tabular">10.00B</div>
+          <div class="pool__stat-label">Reserve X</div>
+        </div>
+        <div>
+          <div class="pool__stat-value tabular">9.99B</div>
+          <div class="pool__stat-label">Reserve Y</div>
+        </div>
+        <div>
+          <div class="pool__stat-value tabular">10.00B</div>
+          <div class="pool__stat-label">LP Supply</div>
+        </div>
+        <div>
+          <div class="pool__stat-value tabular">0.999900</div>
+          <div class="pool__stat-label">Price</div>
+        </div>
+        <div>
+          <div class="pool__stat-value tabular">0.3%</div>
+          <div class="pool__stat-label">Fee</div>
+        </div>
+      </div>
+
+      <p class="pool__ids">
+        Pool: 0x79022dd6...aeedecc &middot; Package: 0xf5b9c384...c8392b7
+      </p>
+    </section>
+
+    <!-- 8. Verify On-Chain -->
+    <section class="verify container" aria-label="On-chain verification">
+      <details>
+        <summary>Verify on-chain &rarr;</summary>
+        <div class="verify__code">
+          <pre><span class="comment"># Pool reserves</span>
+curl -s https://rpc-testnet.onelabs.cc -X POST \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"sui_getObject","params":["0x79022dd6d0f9b9008e56ae55ca8edcd7b4f06f675d6215090b060eb55aeedecc",{"showContent":true}]}' \
+  | python3 -m json.tool
+
+<span class="comment"># MomentumBot profile</span>
+curl -s https://rpc-testnet.onelabs.cc -X POST \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"sui_getObject","params":["0x7f707c63d0fde46a2ec3cd12c7919b342b5ab9a6a1787cff3a6aec99e3cec8cd",{"showContent":true}]}' \
+  | python3 -m json.tool
+
+<span class="comment"># Arena state</span>
+curl -s https://rpc-testnet.onelabs.cc -X POST \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"sui_getObject","params":["0xf9830ccbce88ce83198b6bd36fe50fb2b6ac102d1b2ea07b8fa61df74264a813",{"showContent":true}]}' \
+  | python3 -m json.tool</pre>
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <!-- 9. Footer -->
+  <footer class="footer container">
+    <p class="footer__main">Agent Colosseum &middot; OneHack 3.0 &middot; OneChain</p>
+    <a href="https://github.com/Yonkoo11/agent-colosseum" class="footer__link" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
+    <p class="footer__inspiration">Inspired by: Swiss Design (mathematical asymmetry) + Balenciaga (editorial tension)</p>
+  </footer>
+
+</body>
+</html>
