@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { fetchPoolData, PoolData, POOL_ID, AMM_PACKAGE, fetchAgents, AgentData } from "./chain"
 
 const STATIC_AGENTS = [
@@ -87,11 +87,15 @@ function pnlPrefix(pnl: number): string {
   return pnl > 0 ? "+" : ""
 }
 
+const SECTION_IDS = ["architecture", "bugs", "leaderboard", "rounds", "pool"]
+
 export default function Home() {
   const [pool, setPool] = useState<PoolData | null>(null)
   const [poolLive, setPoolLive] = useState(false)
   const [liveAgents, setLiveAgents] = useState<AgentData[]>([])
   const [agentsLive, setAgentsLive] = useState(false)
+  const [activeSection, setActiveSection] = useState("")
+  const observerRef = useRef<IntersectionObserver | null>(null)
 
   useEffect(() => {
     fetchPoolData().then((data) => {
@@ -102,8 +106,29 @@ export default function Home() {
     })
   }, [])
 
-  // Use live data only if agents have meaningful activity (at least 1 trade total)
-  const liveHasActivity = liveAgents.some((a) => a.trades > 0)
+  // Intersection observer for nav active state
+  useEffect(() => {
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id)
+          }
+        }
+      },
+      { rootMargin: "-20% 0px -60% 0px" }
+    )
+
+    for (const id of SECTION_IDS) {
+      const el = document.getElementById(id)
+      if (el) observerRef.current.observe(el)
+    }
+
+    return () => observerRef.current?.disconnect()
+  }, [])
+
+  // Use live data only if majority of agents have trades
+  const liveHasActivity = liveAgents.filter((a) => a.trades > 0).length >= 2
   const useLive = agentsLive && liveHasActivity
 
   const agents = useLive
@@ -127,11 +152,15 @@ export default function Home() {
       <nav className="nav" role="navigation" aria-label="Primary">
         <div className="nav__inner">
           <a href="#" className="nav__brand">Agent Colosseum</a>
-          <a href="#architecture" className="nav__link">Architecture</a>
-          <a href="#bugs" className="nav__link">Bugs</a>
-          <a href="#leaderboard" className="nav__link">Leaderboard</a>
-          <a href="#rounds" className="nav__link">Rounds</a>
-          <a href="#pool" className="nav__link">Pool</a>
+          {SECTION_IDS.map((id) => (
+            <a
+              key={id}
+              href={`#${id}`}
+              className={`nav__link${activeSection === id ? " nav__link--active" : ""}`}
+            >
+              {id.charAt(0).toUpperCase() + id.slice(1)}
+            </a>
+          ))}
         </div>
       </nav>
 
@@ -242,7 +271,11 @@ export default function Home() {
           <div className="section-marker">
             <span className="section-marker__bar" />
             <span className="section-marker__text">Leaderboard</span>
-            {useLive && <span className="pulse-dot" aria-label="Live data" />}
+            {useLive ? (
+              <><span className="pulse-dot" aria-label="Live data" /><span className="pulse-label">Live</span></>
+            ) : (
+              <span className="pulse-label">Demo</span>
+            )}
           </div>
 
           {/* #1 */}
@@ -283,16 +316,20 @@ export default function Home() {
           </div>
 
           <div className="chart-bars">
-            {ROUNDS.map((r) => (
-              <div className="chart-bar-group" key={r.round}>
-                <span className="chart-price">{r.price.toFixed(4)}</span>
-                <div
-                  className="chart-bar"
-                  style={{ height: `${barHeight(r.price)}%` }}
-                />
-                <span className="chart-round-label">R{r.round}</span>
-              </div>
-            ))}
+            {ROUNDS.map((r, i) => {
+              const prevPrice = i > 0 ? ROUNDS[i - 1].price : r.price
+              const direction = r.price >= prevPrice ? "up" : "down"
+              return (
+                <div className="chart-bar-group" key={r.round}>
+                  <span className="chart-price">{r.price.toFixed(4)}</span>
+                  <div
+                    className={`chart-bar chart-bar--${direction}`}
+                    style={{ height: `${barHeight(r.price)}%` }}
+                  />
+                  <span className="chart-round-label">R{r.round}</span>
+                </div>
+              )
+            })}
           </div>
 
           <div className="round-pnl-table">
@@ -300,14 +337,26 @@ export default function Home() {
             <span className="round-pnl-table__header">Mom</span>
             <span className="round-pnl-table__header">MeanRev</span>
             <span className="round-pnl-table__header">MM</span>
-            {ROUNDS.map((r) => (
-              <React.Fragment key={r.round}>
-                <span className="round-pnl-table__round">R{r.round}</span>
-                <span className="round-pnl-table__val">+{r.mom.toFixed(1)}%</span>
-                <span className="round-pnl-table__val">+{r.mr.toFixed(1)}%</span>
-                <span className="round-pnl-table__val">+{r.mm.toFixed(1)}%</span>
-              </React.Fragment>
-            ))}
+            {ROUNDS.map((r) => {
+              const vals = [r.mom, r.mr, r.mm]
+              const maxVal = Math.max(...vals)
+              return (
+                <React.Fragment key={r.round}>
+                  <span className="round-pnl-table__round">R{r.round}</span>
+                  {vals.map((v, i) => {
+                    const cls = [
+                      v > 0 ? "round-pnl-table__val--positive" : v < 0 ? "round-pnl-table__val--negative" : "",
+                      v === maxVal ? "round-pnl-table__val--winner" : "",
+                    ].filter(Boolean).join(" ")
+                    return (
+                      <span key={i} className={cls}>
+                        {v > 0 ? "+" : ""}{v.toFixed(1)}%
+                      </span>
+                    )
+                  })}
+                </React.Fragment>
+              )
+            })}
           </div>
         </section>
 
@@ -316,7 +365,11 @@ export default function Home() {
           <div className="section-marker">
             <span className="section-marker__bar" />
             <span className="section-marker__text">Pool</span>
-            {poolLive && <span className="pulse-dot" aria-label="Live data" />}
+            {poolLive ? (
+              <><span className="pulse-dot" aria-label="Live data" /><span className="pulse-label">Live</span></>
+            ) : (
+              <span className="pulse-label">Loading</span>
+            )}
           </div>
 
           <div className="pool__stats">
@@ -344,7 +397,7 @@ export default function Home() {
                   <div className="pool__stat-label">LP Supply</div>
                 </div>
                 <div>
-                  <div className="pool__stat-value tabular">{pool.price.toFixed(6)}</div>
+                  <div className="pool__stat-value tabular">{pool.price.toFixed(4)}</div>
                   <div className="pool__stat-label">Price (Y/X)</div>
                 </div>
                 <div>
