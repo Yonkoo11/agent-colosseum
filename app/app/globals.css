@@ -132,6 +132,9 @@ body::after {
 .mono { font-family: var(--mono); }
 .pnl-positive { color: var(--pnl-positive); }
 .pnl-negative { color: var(--pnl-negative); }
+.text-muted { color: var(--text-tertiary); }
+.text-muted-sm { color: var(--text-tertiary); font-size: 14px; font-weight: 500; }
+.skeleton--stat { width: 80px; height: 24px; }
 
 /* ==============================
    Navigation (fixed top)
@@ -174,7 +177,7 @@ body::after {
 }
 
 .nav__link {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -231,7 +234,7 @@ body::after {
 }
 
 .hero__tags {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
   letter-spacing: 0.04em;
@@ -240,7 +243,7 @@ body::after {
 
 .hero__cta {
   display: inline-block;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--accent);
   text-decoration: none;
@@ -288,7 +291,7 @@ body::after {
 }
 
 .hero__stat-label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   color: var(--text-tertiary);
@@ -314,7 +317,7 @@ body::after {
 }
 
 .section-marker__text {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -332,7 +335,7 @@ body::after {
 }
 
 .pulse-label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -341,7 +344,7 @@ body::after {
 }
 
 .section-marker__timestamp {
-  font-size: 10px;
+  font-size: 11px;
   font-family: var(--mono);
   color: var(--text-ghost);
   margin-left: auto;
@@ -408,7 +411,7 @@ body::after {
 }
 
 .arch-layer__tag {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -446,7 +449,7 @@ body::after {
 }
 
 .arch-connector__label {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-tertiary);
   letter-spacing: 0.04em;
 }
@@ -500,7 +503,7 @@ body::after {
 }
 
 .bug__severity {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -518,7 +521,7 @@ body::after {
 
 .bug__location {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-tertiary);
   margin-bottom: var(--sp-2);
 }
@@ -541,7 +544,7 @@ body::after {
 
 .bug__diff code {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.5;
   display: block;
   white-space: pre;
@@ -575,7 +578,7 @@ body::after {
 }
 
 .leader-first__strategy-tag {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -626,7 +629,7 @@ body::after {
 }
 
 .leader-card__rank {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-tertiary);
   text-transform: uppercase;
@@ -647,7 +650,7 @@ body::after {
 }
 
 .leader-card__strategy-tag {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -672,7 +675,7 @@ body::after {
 }
 
 .leader-card__meta {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
@@ -700,7 +703,7 @@ body::after {
 }
 
 .chart-price {
-  font-size: 11px;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
   color: var(--text-secondary);
   margin-bottom: var(--sp-1);
@@ -713,7 +716,7 @@ body::after {
 }
 
 .chart-round-label {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-tertiary);
   margin-top: var(--sp-2);
 }
@@ -725,7 +728,7 @@ body::after {
   display: grid;
   grid-template-columns: 32px 1fr 1fr 1fr;
   gap: var(--sp-1) var(--sp-4);
-  font-size: 11px;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -789,7 +792,7 @@ body::after {
 }
 
 .pool__stat-label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   color: var(--text-tertiary);
@@ -798,7 +801,7 @@ body::after {
 
 .pool__ids {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-ghost);
   line-height: 1.8;
   word-break: break-all;
@@ -843,7 +846,7 @@ body::after {
 
 .verify__code pre {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-tertiary);
   line-height: 1.8;
   white-space: pre;
@@ -862,13 +865,13 @@ body::after {
 }
 
 .footer__main {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-ghost);
   margin-bottom: var(--sp-2);
 }
 
 .footer__link {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--accent);
   text-decoration: none;
@@ -885,6 +888,234 @@ body::after {
   outline: 2px solid var(--accent);
   outline-offset: 4px;
   border-radius: var(--radius-sm);
+}
+
+/* ==============================
+   Animations — Scroll Reveal
+   ============================== */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes growBar {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes countPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Elements start hidden, animate when .is-visible is added */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger children inside a reveal group */
+.reveal-stagger > * {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out);
+}
+
+.reveal-stagger.is-visible > *:nth-child(1) { transition-delay: 0ms; opacity: 1; transform: translateY(0); }
+.reveal-stagger.is-visible > *:nth-child(2) { transition-delay: 80ms; opacity: 1; transform: translateY(0); }
+.reveal-stagger.is-visible > *:nth-child(3) { transition-delay: 160ms; opacity: 1; transform: translateY(0); }
+.reveal-stagger.is-visible > *:nth-child(4) { transition-delay: 240ms; opacity: 1; transform: translateY(0); }
+.reveal-stagger.is-visible > *:nth-child(5) { transition-delay: 320ms; opacity: 1; transform: translateY(0); }
+.reveal-stagger.is-visible > *:nth-child(6) { transition-delay: 400ms; opacity: 1; transform: translateY(0); }
+
+/* Hero title entrance — left slide */
+.hero__title {
+  animation: slideInLeft 0.8s var(--ease-out) both;
+}
+
+.hero__desc {
+  animation: fadeUp 0.7s var(--ease-out) 0.15s both;
+}
+
+.hero__tags {
+  animation: fadeUp 0.6s var(--ease-out) 0.25s both;
+}
+
+.hero__cta {
+  animation: fadeUp 0.6s var(--ease-out) 0.35s both;
+}
+
+.hero__stats {
+  animation: fadeIn 0.8s var(--ease-out) 0.4s both;
+}
+
+/* Hero stat number pulse on load */
+.hero__stat-number {
+  animation: countPulse 0.6s var(--ease-out) 0.8s both;
+}
+
+/* Architecture layers stagger */
+.arch-layer {
+  transition: border-color var(--dur-normal) var(--ease-out),
+              background var(--dur-normal) var(--ease-out),
+              transform var(--dur-normal) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .arch-layer:hover {
+    transform: translateX(4px);
+  }
+}
+
+/* Bug cards — hover glow */
+.bug {
+  border-radius: var(--radius-sm);
+  padding: var(--sp-4);
+  transition: transform var(--dur-fast) var(--ease-out),
+              background var(--dur-normal) var(--ease-out),
+              box-shadow var(--dur-normal) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .bug:hover {
+    background: rgba(255, 255, 255, 0.02);
+    box-shadow: 0 0 0 1px var(--border), 0 4px 24px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Leaderboard first place — ambient glow */
+.leader-first {
+  transition: box-shadow var(--dur-normal) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .leader-first:hover {
+    box-shadow: 0 0 0 1px var(--accent-ghost), 0 8px 32px rgba(217, 119, 6, 0.08);
+  }
+}
+
+/* Leaderboard runner-up cards — lift */
+.leader-card {
+  transition: transform var(--dur-fast) var(--ease-out),
+              border-color var(--dur-normal) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .leader-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent-ghost);
+  }
+}
+
+/* Bar chart — bars grow from bottom */
+.chart-bar {
+  transform-origin: bottom;
+  animation: growBar 0.8s var(--ease-out) both;
+}
+
+.chart-bar-group:nth-child(1) .chart-bar { animation-delay: 0ms; }
+.chart-bar-group:nth-child(2) .chart-bar { animation-delay: 100ms; }
+.chart-bar-group:nth-child(3) .chart-bar { animation-delay: 200ms; }
+.chart-bar-group:nth-child(4) .chart-bar { animation-delay: 300ms; }
+.chart-bar-group:nth-child(5) .chart-bar { animation-delay: 400ms; }
+
+/* Chart prices fade in after bars land */
+.chart-price {
+  animation: fadeIn 0.4s var(--ease-out) 0.6s both;
+}
+
+/* Nav active indicator — animated underline */
+.nav__link {
+  position: relative;
+}
+
+.nav__link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur-normal) var(--ease-out);
+}
+
+.nav__link--active::after {
+  transform: scaleX(1);
+}
+
+/* Pool stat values — subtle scale on data load */
+.pool__stat-value {
+  transition: transform 0.3s var(--ease-out);
+}
+
+.pool__stat-value.just-loaded {
+  animation: countPulse 0.5s var(--ease-out) both;
+}
+
+/* Section glow — brighter, wider */
+.section-glow::before {
+  width: 300px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent-faint), var(--accent-ghost), var(--accent-faint), transparent);
+}
+
+/* Pulse dot — more visible */
+.pulse-dot {
+  width: 7px;
+  height: 7px;
+  box-shadow: 0 0 6px var(--accent), 0 0 12px var(--accent-ghost);
+}
+
+/* Footer link — underline slide */
+.footer__link {
+  position: relative;
+}
+
+.footer__link::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--accent);
+  transition: width var(--dur-normal) var(--ease-out);
+}
+
+.footer__link:hover::after {
+  width: 100%;
+}
+
+/* Verify toggle — arrow rotation */
+.verify summary::before {
+  content: '›';
+  display: inline-block;
+  margin-right: var(--sp-2);
+  transition: transform var(--dur-fast) var(--ease-out);
+  font-size: 16px;
+}
+
+.verify details[open] summary::before {
+  transform: rotate(90deg);
 }
 
 /* ==============================
@@ -955,11 +1186,11 @@ body::after {
   .pool__stats { gap: var(--sp-6); }
 
   .nav__inner { gap: var(--sp-4); }
-  .nav__brand { font-size: 12px; }
+  .nav__brand { font-size: 13px; }
 
   .round-pnl-table {
     grid-template-columns: 28px 1fr 1fr 1fr;
     gap: var(--sp-1) var(--sp-2);
-    font-size: 10px;
+    font-size: 11px;
   }
 }

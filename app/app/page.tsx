@@ -1,7 +1,50 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { fetchPoolData, PoolData, POOL_ID, AMM_PACKAGE, fetchAgents, AgentData, TOKEN_SCALE } from "./chain"
+
+/** Hook: Intersection Observer that adds .is-visible to elements with .reveal or .reveal-stagger */
+function useScrollReveal() {
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible")
+            observer.unobserve(entry.target)
+          }
+        }
+      },
+      { threshold: 0.15 }
+    )
+    const els = document.querySelectorAll(".reveal, .reveal-stagger")
+    els.forEach((el) => observer.observe(el))
+    return () => observer.disconnect()
+  }, [])
+}
+
+/** Hook: Animated number counter */
+function useCountUp(target: number, duration = 800) {
+  const [value, setValue] = useState(0)
+  const started = useRef(false)
+
+  useEffect(() => {
+    if (started.current) return
+    started.current = true
+    const start = performance.now()
+    function tick(now: number) {
+      const elapsed = now - start
+      const progress = Math.min(elapsed / duration, 1)
+      // ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setValue(Math.round(eased * target))
+      if (progress < 1) requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(tick)
+  }, [target, duration])
+
+  return value
+}
 
 // Placeholder agent names shown while chain data loads
 const PLACEHOLDER_AGENTS = [
@@ -118,6 +161,14 @@ export default function Home() {
   const observerRef = useRef<IntersectionObserver | null>(null)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
+  // Animated counters for hero stats
+  const bugCount = useCountUp(4, 600)
+  const agentCount = useCountUp(3, 700)
+  const testCount = useCountUp(39, 900)
+
+  // Scroll reveal animations
+  useScrollReveal()
+
   useEffect(() => {
     const load = () => {
       fetchPoolData().then((data) => {
@@ -230,17 +281,17 @@ export default function Home() {
             </div>
             <div className="hero__stats">
               <div className="hero__stat">
-                <div className="hero__stat-number tabular">4</div>
+                <div className="hero__stat-number tabular">{bugCount}</div>
                 <div className="hero__stat-label">Bugs Fixed</div>
               </div>
               <div className="hero__stat-divider" />
               <div className="hero__stat">
-                <div className="hero__stat-number tabular">3</div>
+                <div className="hero__stat-number tabular">{agentCount}</div>
                 <div className="hero__stat-label">AI Agents</div>
               </div>
               <div className="hero__stat-divider" />
               <div className="hero__stat">
-                <div className="hero__stat-number tabular">39</div>
+                <div className="hero__stat-number tabular">{testCount}</div>
                 <div className="hero__stat-label">Tests</div>
               </div>
             </div>
@@ -248,13 +299,13 @@ export default function Home() {
         </section>
 
         {/* ======== Architecture (stacked layers) ======== */}
-        <section id="architecture" className="architecture container section-glow" aria-label="Architecture">
+        <section id="architecture" className="architecture container section-glow reveal" aria-label="Architecture">
           <div className="section-marker">
             <span className="section-marker__bar" />
             <span className="section-marker__text">Architecture</span>
           </div>
 
-          <div className="arch-stack">
+          <div className="arch-stack reveal-stagger">
             <div className="arch-layer arch-layer--active">
               <span className="arch-layer__num">01</span>
               <div>
@@ -295,13 +346,13 @@ export default function Home() {
         </section>
 
         {/* ======== Bugs (2-col grid) ======== */}
-        <section id="bugs" className="bugs container section-glow" aria-label="Bug report">
+        <section id="bugs" className="bugs container section-glow reveal" aria-label="Bug report">
           <div className="section-marker">
             <span className="section-marker__bar" />
             <span className="section-marker__text">Threat Report &mdash; 4 Bugs</span>
           </div>
 
-          <div className="bugs__grid">
+          <div className="bugs__grid reveal-stagger">
             {BUGS.map((bug) => (
               <article className="bug" key={bug.title}>
                 <div className="bug__header">
@@ -325,7 +376,7 @@ export default function Home() {
         </section>
 
         {/* ======== Leaderboard (asymmetric) ======== */}
-        <section id="leaderboard" className="leaderboard container section-glow" aria-label="Leaderboard">
+        <section id="leaderboard" className="leaderboard container section-glow reveal" aria-label="Leaderboard">
           <div className="section-marker">
             <span className="section-marker__bar" />
             <span className="section-marker__text">Leaderboard</span>
@@ -358,11 +409,11 @@ export default function Home() {
                 )}
               </div>
             ) : agentsLive ? (
-              <div className="leader-first__pnl" style={{ color: "var(--text-tertiary)" }}>
+              <div className="leader-first__pnl text-muted-sm">
                 Registered &middot; awaiting first trade
               </div>
             ) : (
-              <div className="leader-first__pnl" style={{ color: "var(--text-tertiary)" }}>
+              <div className="leader-first__pnl text-muted-sm">
                 &mdash;
               </div>
             )}
@@ -390,11 +441,11 @@ export default function Home() {
                     )}
                   </div>
                 ) : agentsLive ? (
-                  <div className="leader-card__pnl" style={{ color: "var(--text-tertiary)" }}>
+                  <div className="leader-card__pnl text-muted-sm">
                     Awaiting first trade
                   </div>
                 ) : (
-                  <div className="leader-card__pnl" style={{ color: "var(--text-tertiary)" }}>
+                  <div className="leader-card__pnl text-muted-sm">
                     &mdash;
                   </div>
                 )}
@@ -407,7 +458,7 @@ export default function Home() {
         </section>
 
         {/* ======== Rounds (bar chart) ======== */}
-        <section id="rounds" className="rounds container" aria-label="Simulation results">
+        <section id="rounds" className="rounds container reveal" aria-label="Simulation results">
           <div className="section-marker">
             <span className="section-marker__bar" />
             <span className="section-marker__text">Simulation</span>
@@ -415,10 +466,9 @@ export default function Home() {
           </div>
 
           <div className="chart-bars">
-            {ROUNDS.map((r, i) => {
+            {(() => { const allPrices = ROUNDS.map((x) => x.price); return ROUNDS.map((r, i) => {
               const prevPrice = i > 0 ? ROUNDS[i - 1].price : r.price
               const direction = r.price >= prevPrice ? "up" : "down"
-              const allPrices = ROUNDS.map((x) => x.price)
               return (
                 <div className="chart-bar-group" key={r.round}>
                   <span className="chart-price">{r.price.toFixed(4)}</span>
@@ -429,7 +479,7 @@ export default function Home() {
                   <span className="chart-round-label">R{r.round}</span>
                 </div>
               )
-            })}
+            }) })()}
           </div>
 
           <div className="round-pnl-table">
@@ -461,7 +511,7 @@ export default function Home() {
         </section>
 
         {/* ======== Pool Stats ======== */}
-        <section id="pool" className="pool container" aria-label="Pool statistics">
+        <section id="pool" className="pool container reveal" aria-label="Pool statistics">
           <div className="section-marker">
             <span className="section-marker__bar" />
             <span className="section-marker__text">Pool</span>
@@ -508,19 +558,19 @@ export default function Home() {
             ) : (
               <>
                 <div>
-                  <div className="pool__stat-value skeleton" style={{ width: 80, height: 24 }}>&nbsp;</div>
+                  <div className="pool__stat-value skeleton skeleton--stat">&nbsp;</div>
                   <div className="pool__stat-label">Reserve X</div>
                 </div>
                 <div>
-                  <div className="pool__stat-value skeleton" style={{ width: 80, height: 24 }}>&nbsp;</div>
+                  <div className="pool__stat-value skeleton skeleton--stat">&nbsp;</div>
                   <div className="pool__stat-label">Reserve Y</div>
                 </div>
                 <div>
-                  <div className="pool__stat-value skeleton" style={{ width: 80, height: 24 }}>&nbsp;</div>
+                  <div className="pool__stat-value skeleton skeleton--stat">&nbsp;</div>
                   <div className="pool__stat-label">LP Supply</div>
                 </div>
                 <div>
-                  <div className="pool__stat-value skeleton" style={{ width: 80, height: 24 }}>&nbsp;</div>
+                  <div className="pool__stat-value skeleton skeleton--stat">&nbsp;</div>
                   <div className="pool__stat-label">Price</div>
                 </div>
                 <div>
@@ -539,7 +589,7 @@ export default function Home() {
         </section>
 
         {/* ======== Verify On-Chain ======== */}
-        <section className="verify container" aria-label="On-chain verification">
+        <section className="verify container reveal" aria-label="On-chain verification">
           <details>
             <summary>Verify on-chain &rarr;</summary>
             <div className="verify__code">
