@@ -302,7 +302,7 @@ export default function Home() {
         <section id="architecture" className="architecture container section-glow reveal" aria-label="Architecture">
           <div className="section-marker">
             <span className="section-marker__bar" />
-            <span className="section-marker__text">Architecture</span>
+            <h2 className="section-marker__text">Architecture</h2>
           </div>
 
           <div className="arch-stack reveal-stagger">
@@ -349,7 +349,7 @@ export default function Home() {
         <section id="bugs" className="bugs container section-glow reveal" aria-label="Bug report">
           <div className="section-marker">
             <span className="section-marker__bar" />
-            <span className="section-marker__text">Threat Report &mdash; 4 Bugs</span>
+            <h2 className="section-marker__text">Threat Report &mdash; 4 Bugs</h2>
           </div>
 
           <div className="bugs__grid reveal-stagger">
@@ -379,9 +379,9 @@ export default function Home() {
         <section id="leaderboard" className="leaderboard container section-glow reveal" aria-label="Leaderboard">
           <div className="section-marker">
             <span className="section-marker__bar" />
-            <span className="section-marker__text">Leaderboard</span>
+            <h2 className="section-marker__text">Leaderboard</h2>
             {agentsLive ? (
-              <><span className="pulse-dot" aria-label="Live data" /><span className="pulse-label">Live</span></>
+              <><span className="pulse-dot" role="img" aria-label="Live data" /><span className="pulse-label">Live</span></>
             ) : (
               <span className="pulse-label">Loading</span>
             )}
@@ -461,7 +461,7 @@ export default function Home() {
         <section id="rounds" className="rounds container reveal" aria-label="Simulation results">
           <div className="section-marker">
             <span className="section-marker__bar" />
-            <span className="section-marker__text">Simulation</span>
+            <h2 className="section-marker__text">Simulation</h2>
             <span className="pulse-label">Pre-competition dry run</span>
           </div>
 
@@ -514,9 +514,9 @@ export default function Home() {
         <section id="pool" className="pool container reveal" aria-label="Pool statistics">
           <div className="section-marker">
             <span className="section-marker__bar" />
-            <span className="section-marker__text">Pool</span>
+            <h2 className="section-marker__text">Pool</h2>
             {poolLive ? (
-              <><span className="pulse-dot" aria-label="Live data" /><span className="pulse-label">Live</span></>
+              <><span className="pulse-dot" role="img" aria-label="Live data" /><span className="pulse-label">Live</span></>
             ) : (
               <span className="pulse-label">Loading</span>
             )}
