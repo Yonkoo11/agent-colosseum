@@ -96,14 +96,20 @@ export default function Home() {
   const [agentsLive, setAgentsLive] = useState(false)
   const [activeSection, setActiveSection] = useState("")
   const observerRef = useRef<IntersectionObserver | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
   useEffect(() => {
-    fetchPoolData().then((data) => {
-      if (data) { setPool(data); setPoolLive(true) }
-    })
-    fetchAgents().then((data) => {
-      if (data.length > 0) { setLiveAgents(data); setAgentsLive(true) }
-    })
+    const load = () => {
+      fetchPoolData().then((data) => {
+        if (data) { setPool(data); setPoolLive(true); setLastUpdated(new Date()) }
+      })
+      fetchAgents().then((data) => {
+        if (data.length > 0) { setLiveAgents(data); setAgentsLive(true) }
+      })
+    }
+    load()
+    const interval = setInterval(load, 30_000)
+    return () => clearInterval(interval)
   }, [])
 
   // Intersection observer for nav active state
@@ -294,6 +300,11 @@ export default function Home() {
               <span className="pulse-label">Demo</span>
             )}
           </div>
+          {lastUpdated && (
+            <p style={{ fontSize: "0.75rem", color: "var(--color-text-secondary, #666)", marginTop: "0.25rem" }}>
+              Last updated: {lastUpdated.toLocaleTimeString()}
+            </p>
+          )}
 
           {/* #1 */}
           <article className="leader-first">

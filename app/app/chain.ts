@@ -17,10 +17,13 @@ function extractValue(field: any): number {
 }
 
 export async function fetchPoolData(): Promise<PoolData | null> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 10_000)
   try {
     const res = await fetch(RPC, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
       body: JSON.stringify({
         jsonrpc: "2.0",
         id: 1,
@@ -45,6 +48,8 @@ export async function fetchPoolData(): Promise<PoolData | null> {
     }
   } catch {
     return null
+  } finally {
+    clearTimeout(timeout)
   }
 }
 
@@ -77,34 +82,41 @@ export async function fetchAgents(): Promise<AgentData[]> {
   try {
     const results = await Promise.all(
       AGENT_IDS.map(async (agent) => {
-        const res = await fetch(RPC, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            jsonrpc: "2.0",
-            id: 1,
-            method: "sui_getObject",
-            params: [agent.id, { showContent: true }],
-          }),
-        })
-        const json = await res.json()
-        const fields = json?.result?.data?.content?.fields
-        if (!fields) return null
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 10_000)
+        try {
+          const res = await fetch(RPC, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            signal: controller.signal,
+            body: JSON.stringify({
+              jsonrpc: "2.0",
+              id: 1,
+              method: "sui_getObject",
+              params: [agent.id, { showContent: true }],
+            }),
+          })
+          const json = await res.json()
+          const fields = json?.result?.data?.content?.fields
+          if (!fields) return null
 
-        const pnlRaw = BigInt(fields.cumulative_pnl)
-        const pnlDelta = Number(pnlRaw - PNL_OFFSET)
+          const pnlRaw = BigInt(fields.cumulative_pnl)
+          const pnlDelta = Number(pnlRaw - PNL_OFFSET)
 
-        return {
-          name: decodeName(fields.name),
-          strategy: agent.strategy,
-          color: agent.color,
-          balance_x: Number(fields.balance_x),
-          balance_y: Number(fields.balance_y),
-          pnl: pnlDelta,
-          trades: Number(fields.trades),
-          wins: Number(fields.wins),
-          initial_value: Number(fields.initial_value),
-          objectId: agent.id,
+          return {
+            name: decodeName(fields.name),
+            strategy: agent.strategy,
+            color: agent.color,
+            balance_x: Number(fields.balance_x),
+            balance_y: Number(fields.balance_y),
+            pnl: pnlDelta,
+            trades: Number(fields.trades),
+            wins: Number(fields.wins),
+            initial_value: Number(fields.initial_value),
+            objectId: agent.id,
+          }
+        } finally {
+          clearTimeout(timeout)
         }
       })
     )
