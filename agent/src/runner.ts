@@ -5,6 +5,7 @@ import { SkillContext } from "./types.js"
 import { createGetPoolReservesSkill } from "./skills/getPoolReserves.js"
 import { createSwapSkill } from "./skills/swapOnAmm.js"
 import { createGetBalanceSkill } from "./skills/getBalance.js"
+import { createRecordTradeSkill } from "./skills/recordTrade.js"
 
 export interface AgentConfig {
   name: string
@@ -25,6 +26,7 @@ export function createAgent(config: AgentConfig) {
   registry.register(createGetPoolReservesSkill(client))
   registry.register(createSwapSkill(client))
   registry.register(createGetBalanceSkill(client))
+  registry.register(createRecordTradeSkill(client))
 
   const runtime = new AgentRuntime(registry, config.systemPrompt)
 

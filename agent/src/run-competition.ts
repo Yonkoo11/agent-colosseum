@@ -13,11 +13,21 @@ import { MOMENTUM_PROMPT } from "./strategies/momentum.js"
 import { MEAN_REVERSION_PROMPT } from "./strategies/meanReversion.js"
 import { MARKET_MAKER_PROMPT } from "./strategies/marketMaker.js"
 import { Ed25519Keypair } from "@onelabs/sui/keypairs/ed25519"
+import { fromB64 } from "@onelabs/sui/utils"
+import { readFileSync } from "fs"
 
-// Configuration from environment
-const AMM_PACKAGE_ID = process.env.AMM_PACKAGE_ID || "0x0"
-const COLOSSEUM_PACKAGE_ID = process.env.COLOSSEUM_PACKAGE_ID || "0x0"
-const POOL_ID = process.env.POOL_ID || "0x0"
+// Load deployed contract addresses as defaults
+const deployed = JSON.parse(
+  readFileSync(new URL("../../scripts/deployed.json", import.meta.url), "utf-8"),
+)
+
+// Configuration from environment (falls back to deployed.json)
+const AMM_PACKAGE_ID = process.env.AMM_PACKAGE_ID || deployed.contracts.amm.packageId
+const COLOSSEUM_PACKAGE_ID =
+  process.env.COLOSSEUM_PACKAGE_ID || deployed.contracts.colosseum.packageId
+const POOL_ID = process.env.POOL_ID || deployed.pools.cola_water.poolId
+const ARENA_ID = process.env.ARENA_ID || deployed.arena.arenaId
+const AGENT_PROFILES: Record<string, string> = deployed.arena.agents
 const ROUNDS = parseInt(process.env.ROUNDS || "5")
 
 interface AgentState {
@@ -37,11 +47,24 @@ async function main() {
   console.log(`Pool: ${POOL_ID}`)
   console.log(`Rounds: ${ROUNDS}\n`)
 
+  // Load keypair for live trading
+  let keypair: Ed25519Keypair | null = null
+  if (process.env.PRIVATE_KEY) {
+    keypair = Ed25519Keypair.fromSecretKey(fromB64(process.env.PRIVATE_KEY))
+    console.log(`Wallet: ${keypair.toSuiAddress()}`)
+  } else if (process.env.MNEMONIC) {
+    keypair = Ed25519Keypair.deriveKeypair(process.env.MNEMONIC)
+    console.log(`Wallet: ${keypair.toSuiAddress()}`)
+  }
+
+  const isLive = !!process.env.OPENAI_API_KEY && !!keypair
+  console.log(`Mode: ${isLive ? "LIVE (on-chain)" : "DEMO (simulated)"}\n`)
+
   // Create agents with different strategies
-  const agentConfigs: { name: string; strategy: string; prompt: string }[] = [
-    { name: "MomentumBot", strategy: "Momentum", prompt: MOMENTUM_PROMPT },
-    { name: "MeanRevBot", strategy: "Mean Reversion", prompt: MEAN_REVERSION_PROMPT },
-    { name: "MMBot", strategy: "Market Maker", prompt: MARKET_MAKER_PROMPT },
+  const agentConfigs: { name: string; strategy: string; prompt: string; profileId?: string }[] = [
+    { name: "MomentumBot", strategy: "Momentum", prompt: MOMENTUM_PROMPT, profileId: AGENT_PROFILES["MomentumBot"] },
+    { name: "MeanRevBot", strategy: "Mean Reversion", prompt: MEAN_REVERSION_PROMPT, profileId: AGENT_PROFILES["MeanRevBot"] },
+    { name: "MMBot", strategy: "Market Maker", prompt: MARKET_MAKER_PROMPT, profileId: AGENT_PROFILES["MMBot"] },
   ]
 
   const agents = agentConfigs.map((c) =>
@@ -51,6 +74,8 @@ async function main() {
       ammPackageId: AMM_PACKAGE_ID,
       colosseumPackageId: COLOSSEUM_PACKAGE_ID,
       poolId: POOL_ID,
+      arenaId: ARENA_ID,
+      agentProfileId: c.profileId,
     }),
   )
 
@@ -94,10 +119,13 @@ What do you want to do this round? Explain your reasoning briefly.`
         if (process.env.OPENAI_API_KEY) {
           // Live mode: agent decides via OpenAI tool calling
           const result = await agent.run(prompt, {
-            userAddress: "0x0",
+            userAddress: keypair?.toSuiAddress() || "0x0",
+            wallet: keypair || undefined,
             ammPackageId: AMM_PACKAGE_ID,
             colosseumPackageId: COLOSSEUM_PACKAGE_ID,
             poolId: POOL_ID,
+            arenaId: ARENA_ID,
+            agentProfileId: agentConfigs[i].profileId,
           })
           // Parse agent response for trade info
           console.log(`  ${state.name}: ${result?.slice(0, 120) ?? "no response"}`)

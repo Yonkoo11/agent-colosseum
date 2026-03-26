@@ -4,7 +4,7 @@ STRATEGY: Market Making
 - Profit from providing liquidity and collecting fees, not directional bets
 - Keep balanced exposure: roughly equal value in X and Y
 - When portfolio is imbalanced, trade to rebalance
-- In high volatility: reduce exposure (remove liquidity or trade less)
+- In high volatility: reduce trade size to limit risk
 - In low volatility: increase exposure for more fee collection
 
 RULES:

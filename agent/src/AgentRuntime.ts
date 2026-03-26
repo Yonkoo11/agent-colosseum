@@ -2,6 +2,11 @@ import OpenAI from "openai"
 import { SkillRegistry } from "./SkillRegistry.js"
 import { SkillContext } from "./types.js"
 
+export interface AgentRuntimeOptions {
+  model?: string
+  maxTokens?: number
+}
+
 /**
  * Fixed AgentRuntime: processes ALL tool_calls, not just the first one.
  * Original bug: onechain-agent/packages/agent-runtime/src/AgentRuntime.ts:41
@@ -10,13 +15,18 @@ import { SkillContext } from "./types.js"
 export class AgentRuntime {
   private _openai: OpenAI | null = null
   private openaiApiKey?: string
+  private model: string
+  private maxTokens: number
 
   constructor(
     private registry: SkillRegistry,
     private systemPrompt: string,
     openaiApiKey?: string,
+    options?: AgentRuntimeOptions,
   ) {
     this.openaiApiKey = openaiApiKey
+    this.model = options?.model || "gpt-4o-mini"
+    this.maxTokens = options?.maxTokens || 1000
   }
 
   private get openai(): OpenAI {
@@ -26,6 +36,20 @@ export class AgentRuntime {
       })
     }
     return this._openai
+  }
+
+  private async callWithRetry(params: any): Promise<any> {
+    try {
+      return await this.openai.chat.completions.create(params)
+    } catch (err: any) {
+      const status = err?.status || err?.response?.status
+      if (status === 429 || status === 500 || status === 503) {
+        console.log(`  [AgentRuntime] Retrying after ${status}...`)
+        await new Promise((r) => setTimeout(r, 2000))
+        return this.openai.chat.completions.create(params)
+      }
+      throw err
+    }
   }
 
   async chat(messages: any[], ctx: SkillContext): Promise<any> {
@@ -38,9 +62,9 @@ export class AgentRuntime {
     ]
 
     for (let round = 0; round < maxRounds; round++) {
-      const response = await this.openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        max_tokens: 1000,
+      const response = await this.callWithRetry({
+        model: this.model,
+        max_tokens: this.maxTokens,
         messages: currentMessages,
         tools: tools.length > 0 ? tools : undefined,
       })
@@ -67,6 +91,9 @@ export class AgentRuntime {
           tool_call_id: toolCall.id,
           content: typeof result === "string" ? result : JSON.stringify(result),
         })
+        console.log(
+          `  [Tool] ${toolCall.function.name}(${toolCall.function.arguments.slice(0, 80)}) → ${typeof result === "string" ? result.slice(0, 60) : JSON.stringify(result).slice(0, 60)}`,
+        )
       }
 
       // Append assistant message + tool results, loop for next round
@@ -74,8 +101,8 @@ export class AgentRuntime {
     }
 
     // Hit max rounds — do one final call without tools to get a text response
-    const final = await this.openai.chat.completions.create({
-      model: "gpt-4o-mini",
+    const final = await this.callWithRetry({
+      model: this.model,
       messages: currentMessages,
     })
     return final.choices[0].message
