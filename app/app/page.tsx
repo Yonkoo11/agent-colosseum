@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { fetchPoolData, PoolData, POOL_ID, AMM_PACKAGE, fetchAgents, AgentData } from "./chain"
 
 const STATIC_AGENTS = [
@@ -57,18 +57,34 @@ const ROUNDS = [
 ]
 
 function formatBig(n: number): string {
-  if (n >= 1e18) return (n / 1e18).toFixed(2) + "B"
-  if (n >= 1e15) return (n / 1e15).toFixed(2) + "M"
-  if (n >= 1e12) return (n / 1e12).toFixed(2) + "K"
+  if (n >= 1e18) return (n / 1e18).toFixed(2)
+  if (n >= 1e15) return (n / 1e15).toFixed(2)
+  if (n >= 1e12) return (n / 1e12).toFixed(2)
   if (n >= 1e9) return (n / 1e9).toFixed(2)
   return n.toLocaleString()
 }
 
-// Bar height: normalize price to 0-100% range based on min/max
+function formatBigUnit(n: number): string {
+  if (n >= 1e18) return "B"
+  if (n >= 1e15) return "M"
+  if (n >= 1e12) return "K"
+  return ""
+}
+
 function barHeight(price: number): number {
   const min = 1.0
   const max = 1.2
   return Math.max(10, Math.min(100, ((price - min) / (max - min)) * 100))
+}
+
+function pnlClass(pnl: number): string {
+  if (pnl > 0) return "pnl-positive"
+  if (pnl < 0) return "pnl-negative"
+  return ""
+}
+
+function pnlPrefix(pnl: number): string {
+  return pnl > 0 ? "+" : ""
 }
 
 export default function Home() {
@@ -86,8 +102,11 @@ export default function Home() {
     })
   }, [])
 
-  // Resolve display agents: live or static fallback
-  const agents = agentsLive
+  // Use live data only if agents have meaningful activity (at least 1 trade total)
+  const liveHasActivity = liveAgents.some((a) => a.trades > 0)
+  const useLive = agentsLive && liveHasActivity
+
+  const agents = useLive
     ? liveAgents
         .map((a) => ({
           name: a.name,
@@ -107,6 +126,7 @@ export default function Home() {
       {/* ======== Navigation ======== */}
       <nav className="nav" role="navigation" aria-label="Primary">
         <div className="nav__inner">
+          <a href="#" className="nav__brand">Agent Colosseum</a>
           <a href="#architecture" className="nav__link">Architecture</a>
           <a href="#bugs" className="nav__link">Bugs</a>
           <a href="#leaderboard" className="nav__link">Leaderboard</a>
@@ -131,6 +151,14 @@ export default function Home() {
               <p className="hero__tags">
                 Move &middot; TypeScript &middot; 39 Tests &middot; Sui Fork
               </p>
+              <a
+                href="https://github.com/Yonkoo11/agent-colosseum"
+                className="hero__cta"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View on GitHub &rarr;
+              </a>
             </div>
             <div className="hero__stats">
               <div className="hero__stat">
@@ -179,20 +207,22 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ======== Bugs ======== */}
+        {/* ======== Bugs (2-col grid) ======== */}
         <section id="bugs" className="bugs container" aria-label="Bug report">
           <div className="section-marker">
             <span className="section-marker__bar" />
             <span className="section-marker__text">Threat Report &mdash; 4 Bugs</span>
           </div>
 
-          {BUGS.map((bug) => (
-            <article className="bug" key={bug.title}>
-              <div className={`bug__severity bug__severity--${bug.severity}`}>
-                {bug.label}
-              </div>
-              <div>
-                <h3 className="bug__title">{bug.title}</h3>
+          <div className="bugs__grid">
+            {BUGS.map((bug) => (
+              <article className="bug" key={bug.title}>
+                <div className="bug__header">
+                  <span className={`bug__severity bug__severity--${bug.severity}`}>
+                    {bug.label}
+                  </span>
+                  <h3 className="bug__title">{bug.title}</h3>
+                </div>
                 <p className="bug__location">{bug.location}</p>
                 <p className="bug__desc">{bug.desc}</p>
                 <div className="bug__diff">
@@ -202,9 +232,9 @@ export default function Home() {
                     <span className="diff-add">{bug.added}</span>
                   </code>
                 </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            ))}
+          </div>
         </section>
 
         {/* ======== Leaderboard (asymmetric) ======== */}
@@ -212,14 +242,14 @@ export default function Home() {
           <div className="section-marker">
             <span className="section-marker__bar" />
             <span className="section-marker__text">Leaderboard</span>
-            {agentsLive && <span className="pulse-dot" aria-label="Live data" />}
+            {useLive && <span className="pulse-dot" aria-label="Live data" />}
           </div>
 
-          {/* #1 — large treatment */}
+          {/* #1 */}
           <article className="leader-first">
             <h3 className="leader-first__name">{first.name}</h3>
-            <div className="leader-first__pnl">
-              {first.pnl >= 0 ? "+" : ""}{first.pnl.toFixed(2)}%
+            <div className={`leader-first__pnl ${pnlClass(first.pnl)}`}>
+              {pnlPrefix(first.pnl)}{first.pnl.toFixed(2)}%
             </div>
             <p className="leader-first__meta">
               {first.trades} trades &middot; {first.wins} wins
@@ -227,13 +257,15 @@ export default function Home() {
             <p className="leader-first__strategy">{first.strategy}</p>
           </article>
 
-          {/* #2 and #3 — side by side */}
+          {/* #2 and #3 */}
           <div className="leader-rest">
             {rest.map((agent, i) => (
               <article className="leader-card" key={agent.name}>
                 <div className="leader-card__rank">#{i + 2}</div>
                 <h3 className="leader-card__name">{agent.name}</h3>
-                <div className="leader-card__pnl">{agent.pnl >= 0 ? "+" : ""}{agent.pnl.toFixed(2)}%</div>
+                <div className={`leader-card__pnl ${pnlClass(agent.pnl)}`}>
+                  {pnlPrefix(agent.pnl)}{agent.pnl.toFixed(2)}%
+                </div>
                 <p className="leader-card__meta">
                   {agent.trades} trades &middot; {agent.wins} wins
                 </p>
@@ -264,11 +296,17 @@ export default function Home() {
           </div>
 
           <div className="round-pnl-table">
+            <span className="round-pnl-table__header"></span>
+            <span className="round-pnl-table__header">Mom</span>
+            <span className="round-pnl-table__header">MeanRev</span>
+            <span className="round-pnl-table__header">MM</span>
             {ROUNDS.map((r) => (
-              <div className="round-pnl-row" key={r.round}>
-                <span>R{r.round}</span>
-                Mom +{r.mom.toFixed(1)}% &middot; MeanRev +{r.mr.toFixed(1)}% &middot; MM +{r.mm.toFixed(1)}%
-              </div>
+              <React.Fragment key={r.round}>
+                <span className="round-pnl-table__round">R{r.round}</span>
+                <span className="round-pnl-table__val">+{r.mom.toFixed(1)}%</span>
+                <span className="round-pnl-table__val">+{r.mr.toFixed(1)}%</span>
+                <span className="round-pnl-table__val">+{r.mm.toFixed(1)}%</span>
+              </React.Fragment>
             ))}
           </div>
         </section>
@@ -285,20 +323,29 @@ export default function Home() {
             {pool ? (
               <>
                 <div>
-                  <div className="pool__stat-value tabular">{formatBig(pool.reserve_x)}</div>
+                  <div className="pool__stat-value tabular">
+                    {formatBig(pool.reserve_x)}
+                    <span className="pool__stat-unit">{formatBigUnit(pool.reserve_x)}</span>
+                  </div>
                   <div className="pool__stat-label">Reserve X (COLA)</div>
                 </div>
                 <div>
-                  <div className="pool__stat-value tabular">{formatBig(pool.reserve_y)}</div>
+                  <div className="pool__stat-value tabular">
+                    {formatBig(pool.reserve_y)}
+                    <span className="pool__stat-unit">{formatBigUnit(pool.reserve_y)}</span>
+                  </div>
                   <div className="pool__stat-label">Reserve Y (WATER)</div>
                 </div>
                 <div>
-                  <div className="pool__stat-value tabular">{formatBig(pool.lp_supply)}</div>
+                  <div className="pool__stat-value tabular">
+                    {formatBig(pool.lp_supply)}
+                    <span className="pool__stat-unit">{formatBigUnit(pool.lp_supply)}</span>
+                  </div>
                   <div className="pool__stat-label">LP Supply</div>
                 </div>
                 <div>
                   <div className="pool__stat-value tabular">{pool.price.toFixed(6)}</div>
-                  <div className="pool__stat-label">Price</div>
+                  <div className="pool__stat-label">Price (Y/X)</div>
                 </div>
                 <div>
                   <div className="pool__stat-value tabular">{(pool.fee_bps / 100).toFixed(1)}%</div>
