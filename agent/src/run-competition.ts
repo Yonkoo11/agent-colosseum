@@ -6,13 +6,15 @@
  * Results are printed as a leaderboard after each round.
  */
 
-import "dotenv/config"
+import dotenv from "dotenv"
+dotenv.config({ override: true })
 import { createAgent, AgentConfig } from "./runner.js"
 import { SkillContext } from "./types.js"
 import { MOMENTUM_PROMPT } from "./strategies/momentum.js"
 import { MEAN_REVERSION_PROMPT } from "./strategies/meanReversion.js"
 import { MARKET_MAKER_PROMPT } from "./strategies/marketMaker.js"
 import { Ed25519Keypair } from "@onelabs/sui/keypairs/ed25519"
+import { decodeSuiPrivateKey } from "@onelabs/sui/cryptography"
 import { fromB64 } from "@onelabs/sui/utils"
 import { readFileSync } from "fs"
 
@@ -50,14 +52,20 @@ async function main() {
   // Load keypair for live trading
   let keypair: Ed25519Keypair | null = null
   if (process.env.PRIVATE_KEY) {
-    keypair = Ed25519Keypair.fromSecretKey(fromB64(process.env.PRIVATE_KEY))
+    const pk = process.env.PRIVATE_KEY
+    if (pk.startsWith("suiprivkey")) {
+      const { secretKey } = decodeSuiPrivateKey(pk)
+      keypair = Ed25519Keypair.fromSecretKey(secretKey)
+    } else {
+      keypair = Ed25519Keypair.fromSecretKey(fromB64(pk))
+    }
     console.log(`Wallet: ${keypair.toSuiAddress()}`)
   } else if (process.env.MNEMONIC) {
     keypair = Ed25519Keypair.deriveKeypair(process.env.MNEMONIC)
     console.log(`Wallet: ${keypair.toSuiAddress()}`)
   }
 
-  const isLive = !!process.env.OPENAI_API_KEY && !!keypair
+  const isLive = !!process.env.ANTHROPIC_API_KEY && !!keypair
   console.log(`Mode: ${isLive ? "LIVE (on-chain)" : "DEMO (simulated)"}\n`)
 
   // Create agents with different strategies
@@ -116,8 +124,8 @@ Your total value (in Y): ${(state.balance_x * currentPrice + state.balance_y).to
 What do you want to do this round? Explain your reasoning briefly.`
 
       try {
-        if (process.env.OPENAI_API_KEY) {
-          // Live mode: agent decides via OpenAI tool calling
+        if (process.env.ANTHROPIC_API_KEY) {
+          // Live mode: agent decides via Claude tool calling
           const result = await agent.run(prompt, {
             userAddress: keypair?.toSuiAddress() || "0x0",
             wallet: keypair || undefined,
@@ -127,8 +135,12 @@ What do you want to do this round? Explain your reasoning briefly.`
             arenaId: ARENA_ID,
             agentProfileId: agentConfigs[i].profileId,
           })
-          // Parse agent response for trade info
-          console.log(`  ${state.name}: ${result?.slice(0, 120) ?? "no response"}`)
+          // Extract text from Claude response
+          const text = result.content
+            .filter((b: any) => b.type === "text")
+            .map((b: any) => b.text)
+            .join(" ")
+          console.log(`  ${state.name}: ${text.slice(0, 120) || "no response"}`)
           state.trades += 1
         } else {
           // Demo mode: deterministic simulation, no API key needed

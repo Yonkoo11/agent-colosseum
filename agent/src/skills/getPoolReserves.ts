@@ -9,12 +9,13 @@ export function createGetPoolReservesSkill(client: OneChainClient): Skill {
     parameters: {
       type: "object",
       properties: {
-        poolId: { type: "string", description: "The pool object ID" },
+        poolId: { type: "string", description: "The pool object ID (optional, uses default pool)" },
       },
-      required: ["poolId"],
+      required: [],
     },
     async execute(args, ctx) {
-      const reserves = await client.getPoolReserves(args.poolId || ctx.poolId!)
+      const poolId = (args.poolId && args.poolId.startsWith("0x")) ? args.poolId : ctx.poolId!
+      const reserves = await client.getPoolReserves(poolId)
       const price =
         reserves.reserve_x > 0
           ? reserves.reserve_y / reserves.reserve_x

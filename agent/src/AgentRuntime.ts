@@ -1,4 +1,4 @@
-import OpenAI from "openai"
+import Anthropic from "@anthropic-ai/sdk"
 import { SkillRegistry } from "./SkillRegistry.js"
 import { SkillContext } from "./types.js"
 
@@ -8,103 +8,114 @@ export interface AgentRuntimeOptions {
 }
 
 /**
- * Fixed AgentRuntime: processes ALL tool_calls, not just the first one.
- * Original bug: onechain-agent/packages/agent-runtime/src/AgentRuntime.ts:41
- * `const toolCall = message.tool_calls[0]` — silently dropped all but first tool call.
+ * AgentRuntime using Anthropic Claude for tool-calling agent loop.
+ * Processes ALL tool_use blocks per response (parallel tool calls).
  */
 export class AgentRuntime {
-  private _openai: OpenAI | null = null
-  private openaiApiKey?: string
+  private _client: Anthropic | null = null
+  private apiKey?: string
   private model: string
   private maxTokens: number
 
   constructor(
     private registry: SkillRegistry,
     private systemPrompt: string,
-    openaiApiKey?: string,
+    apiKey?: string,
     options?: AgentRuntimeOptions,
   ) {
-    this.openaiApiKey = openaiApiKey
-    this.model = options?.model || "gpt-4o-mini"
-    this.maxTokens = options?.maxTokens || 1000
+    this.apiKey = apiKey
+    this.model = options?.model || "claude-haiku-4-5-20251001"
+    this.maxTokens = options?.maxTokens || 1024
   }
 
-  private get openai(): OpenAI {
-    if (!this._openai) {
-      this._openai = new OpenAI({
-        apiKey: this.openaiApiKey || process.env.OPENAI_API_KEY,
+  private get client(): Anthropic {
+    if (!this._client) {
+      this._client = new Anthropic({
+        apiKey: this.apiKey || process.env.ANTHROPIC_API_KEY,
+        timeout: 60_000,
       })
     }
-    return this._openai
+    return this._client
   }
 
-  private async callWithRetry(params: any): Promise<any> {
+  private getTools(): Anthropic.Tool[] {
+    return this.registry.getToolDefinitions().map((t) => ({
+      name: t.function.name,
+      description: t.function.description,
+      input_schema: t.function.parameters as Anthropic.Tool.InputSchema,
+    }))
+  }
+
+  private async callApi(
+    messages: Anthropic.MessageParam[],
+    tools?: Anthropic.Tool[],
+  ): Promise<Anthropic.Message> {
+    const params: Anthropic.MessageCreateParamsNonStreaming = {
+      model: this.model,
+      max_tokens: this.maxTokens,
+      system: this.systemPrompt,
+      messages,
+      ...(tools && tools.length > 0 ? { tools } : {}),
+    }
     try {
-      return await this.openai.chat.completions.create(params)
+      return await this.client.messages.create(params)
     } catch (err: any) {
-      const status = err?.status || err?.response?.status
-      if (status === 429 || status === 500 || status === 503) {
+      const status = err?.status
+      if (status === 429 || status === 500 || status === 529) {
         console.log(`  [AgentRuntime] Retrying after ${status}...`)
         await new Promise((r) => setTimeout(r, 2000))
-        return this.openai.chat.completions.create(params)
+        return await this.client.messages.create(params)
       }
       throw err
     }
   }
 
-  async chat(messages: any[], ctx: SkillContext): Promise<any> {
-    const tools = this.registry.getToolDefinitions()
-    const maxRounds = 5 // prevent infinite loops
+  async chat(messages: Anthropic.MessageParam[], ctx: SkillContext): Promise<Anthropic.Message> {
+    const tools = this.getTools()
+    const maxRounds = 5
 
-    let currentMessages: any[] = [
-      { role: "system", content: this.systemPrompt },
-      ...messages,
-    ]
+    let currentMessages: Anthropic.MessageParam[] = [...messages]
 
     for (let round = 0; round < maxRounds; round++) {
-      const response = await this.callWithRetry({
-        model: this.model,
-        max_tokens: this.maxTokens,
-        messages: currentMessages,
-        tools: tools.length > 0 ? tools : undefined,
-      })
+      const response = await this.callApi(currentMessages, tools)
 
-      const message = response.choices[0].message
-
-      if (!message.tool_calls?.length) {
-        // No more tool calls — LLM is done
-        return message
+      if (response.stop_reason !== "tool_use") {
+        return response
       }
 
-      // Execute ALL tool calls in this round
-      const toolResults: any[] = []
-      for (const toolCall of message.tool_calls) {
-        const args = JSON.parse(toolCall.function.arguments)
+      // Extract all tool_use blocks
+      const toolUseBlocks = response.content.filter((b) => b.type === "tool_use")
+
+      // Execute all tool calls
+      const toolResults: Anthropic.ToolResultBlockParam[] = []
+      for (const block of toolUseBlocks) {
+        if (block.type !== "tool_use") continue
         let result: any
         try {
-          result = await this.registry.execute(toolCall.function.name, args, ctx)
+          result = await this.registry.execute(block.name, block.input, ctx)
         } catch (execError: any) {
           result = { error: execError.message || "Tool execution failed" }
         }
+        const content = typeof result === "string" ? result : JSON.stringify(result)
         toolResults.push({
-          role: "tool",
-          tool_call_id: toolCall.id,
-          content: typeof result === "string" ? result : JSON.stringify(result),
+          type: "tool_result",
+          tool_use_id: block.id,
+          content,
         })
         console.log(
-          `  [Tool] ${toolCall.function.name}(${toolCall.function.arguments.slice(0, 80)}) → ${typeof result === "string" ? result.slice(0, 60) : JSON.stringify(result).slice(0, 60)}`,
+          `  [Tool] ${block.name}(${JSON.stringify(block.input).slice(0, 80)}) → ${content.slice(0, 60)}`,
         )
       }
 
-      // Append assistant message + tool results, loop for next round
-      currentMessages = [...currentMessages, message, ...toolResults]
+      // Append assistant response + tool results, loop
+      currentMessages = [
+        ...currentMessages,
+        { role: "assistant" as const, content: response.content },
+        { role: "user" as const, content: toolResults },
+      ]
     }
 
-    // Hit max rounds — do one final call without tools to get a text response
-    const final = await this.callWithRetry({
-      model: this.model,
-      messages: currentMessages,
-    })
-    return final.choices[0].message
+    // Hit max rounds — final call without tools
+    return await this.callApi(currentMessages)
   }
 }
