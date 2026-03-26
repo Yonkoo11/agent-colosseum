@@ -160,25 +160,24 @@ export default function Home() {
     ? liveAgents
         .map((a) => {
           const portfolioRaw = a.balance_x * poolPrice + a.balance_y
-          // Use on-chain cumulative_pnl (raw delta from 1e18 offset).
-          // Convert to percentage: pnl / initial_value * 100.
-          // If initial_value is too small (placeholder from registration), fall back
-          // to showing the raw pnl delta scaled by TOKEN_SCALE.
-          const pnlPct = a.initial_value > TOKEN_SCALE
-            ? (a.pnl / a.initial_value) * 100
-            : a.pnl / TOKEN_SCALE // raw pnl in token units, not percentage
+          // Only show PnL% when initial_value is meaningful (> 1 token in raw units).
+          // The on-chain initial_value was set at registration and may be a placeholder.
+          const hasReliablePnl = a.initial_value > TOKEN_SCALE
+          const pnlPct = hasReliablePnl
+            ? ((portfolioRaw - a.initial_value) / a.initial_value) * 100
+            : 0
           return {
             name: a.name,
             strategy: a.strategy,
             pnl: pnlPct,
-            pnlIsRaw: a.initial_value <= TOKEN_SCALE,
+            hasPnl: hasReliablePnl,
             portfolioValue: portfolioRaw,
             trades: a.trades,
             wins: a.wins,
           }
         })
         .sort((a, b) => b.portfolioValue - a.portfolioValue)
-    : PLACEHOLDER_AGENTS.map((a) => ({ ...a, pnl: 0, pnlIsRaw: false, portfolioValue: 0, trades: 0, wins: 0 }))
+    : PLACEHOLDER_AGENTS.map((a) => ({ ...a, pnl: 0, hasPnl: false, portfolioValue: 0, trades: 0, wins: 0 }))
 
   const hasAnyTrades = agents.some((a) => a.trades > 0)
 
@@ -352,11 +351,11 @@ export default function Home() {
               <div className="leader-first__value tabular">
                 {formatPortfolio(first.portfolioValue)}
                 <span className="leader-first__value-label">portfolio</span>
-                <span className={`leader-first__pnl-inline ${pnlClass(first.pnl)}`}>
-                  {first.pnlIsRaw
-                    ? `${pnlPrefix(first.pnl)}${first.pnl.toFixed(2)} tokens`
-                    : `${pnlPrefix(first.pnl)}${first.pnl.toFixed(2)}%`}
-                </span>
+                {first.hasPnl && (
+                  <span className={`leader-first__pnl-inline ${pnlClass(first.pnl)}`}>
+                    {pnlPrefix(first.pnl)}{first.pnl.toFixed(2)}%
+                  </span>
+                )}
               </div>
             ) : agentsLive ? (
               <div className="leader-first__pnl" style={{ color: "var(--text-tertiary)" }}>
@@ -384,11 +383,11 @@ export default function Home() {
                 {agent.trades > 0 ? (
                   <div className="leader-card__value tabular">
                     {formatPortfolio(agent.portfolioValue)}
-                    <span className={`leader-card__pnl-inline ${pnlClass(agent.pnl)}`}>
-                      {agent.pnlIsRaw
-                        ? `${pnlPrefix(agent.pnl)}${agent.pnl.toFixed(2)} tokens`
-                        : `${pnlPrefix(agent.pnl)}${agent.pnl.toFixed(2)}%`}
-                    </span>
+                    {agent.hasPnl && (
+                      <span className={`leader-card__pnl-inline ${pnlClass(agent.pnl)}`}>
+                        {pnlPrefix(agent.pnl)}{agent.pnl.toFixed(2)}%
+                      </span>
+                    )}
                   </div>
                 ) : agentsLive ? (
                   <div className="leader-card__pnl" style={{ color: "var(--text-tertiary)" }}>
