@@ -1,0 +1,19 @@
+{
+  "name": "agent-colosseum",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/runner.js",
+    "competition": "node dist/run-competition.js"
+  },
+  "dependencies": {
+    "@onelabs/sui": "^1.26.2",
+    "openai": "^4.0.0",
+    "dotenv": "^16.4.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0",
+    "@types/node": "^20.0.0"
+  }
+}

@@ -1,0 +1,13 @@
+[package]
+name = "amm"
+edition = "2024.beta"
+
+[dependencies]
+One = { git = "https://github.com/one-chain-labs/onechain.git", subdir = "crates/sui-framework/packages/one-framework", rev = "main" }
+
+[addresses]
+amm = "0x0"
+
+[dev-dependencies]
+
+[dev-addresses]

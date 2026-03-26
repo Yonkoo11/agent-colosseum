@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a26;
+  --border: #2a2a3a;
+  --text-primary: #e8e8f0;
+  --text-secondary: #8888a0;
+  --accent: #6366f1;
+  --accent-muted: #4f46e5;
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #eab308;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: "Inter", -apple-system, system-ui, sans-serif;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.badge-green { background: rgba(34, 197, 94, 0.15); color: var(--green); }
+.badge-red { background: rgba(239, 68, 68, 0.15); color: var(--red); }
+.badge-yellow { background: rgba(234, 179, 8, 0.15); color: var(--yellow); }
+.badge-accent { background: rgba(99, 102, 241, 0.15); color: var(--accent); }
+
+/* Responsive grids */
+.grid-arch { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.grid-rounds { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+.grid-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+@media (max-width: 768px) {
+  .grid-arch { grid-template-columns: 1fr; }
+  .grid-rounds { grid-template-columns: repeat(2, 1fr); }
+  .grid-stats { grid-template-columns: repeat(2, 1fr); }
+  table { font-size: 13px; }
+}
+
+@media (max-width: 480px) {
+  .grid-rounds { grid-template-columns: 1fr; }
+  .grid-stats { grid-template-columns: 1fr; }
+}
