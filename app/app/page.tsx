@@ -257,9 +257,9 @@ export default function Home() {
       </nav>
 
       <main>
-        {rpcFailed && !poolLive && (
+        {rpcFailed && (
           <div className="rpc-banner" role="alert">
-            RPC unavailable &mdash; showing cached data. Retrying every 30s.
+            RPC unavailable{poolLive ? " — showing cached data" : ""}. Retrying every 30s.
           </div>
         )}
 

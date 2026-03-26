@@ -196,9 +196,10 @@ async function runLive(keypairs: (Ed25519Keypair | null)[]) {
     }),
   )
 
-  // Read initial pool price
+  // Read initial pool price (used as anchor for mean reversion strategy)
   const initPool = await client.getPoolReserves(POOL_ID)
-  let lastPrice = initPool.reserve_x > 0 ? initPool.reserve_y / initPool.reserve_x : 1.0
+  const anchorPrice = initPool.reserve_x > 0 ? initPool.reserve_y / initPool.reserve_x : 1.0
+  let lastPrice = anchorPrice
 
   // Read initial balances for each agent (for PnL baseline)
   const initialValues: number[] = []
@@ -243,6 +244,7 @@ async function runLive(keypairs: (Ed25519Keypair | null)[]) {
 Use getPoolReserves to check the current market price.
 Use getBalance to check your token holdings.
 Last known price: ~${lastPrice.toFixed(6)} Y per X.
+Anchor price (round 0): ~${anchorPrice.toFixed(6)} Y per X.
 All token amounts are in base units (9 decimals: 1 token = 1000000000).
 Decide what to trade this round.`
 
