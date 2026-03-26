@@ -10,6 +10,9 @@ export interface PoolData {
   price: number
 }
 
+// OneChain tokens use 9 decimal places
+export const TOKEN_SCALE = 1_000_000_000
+
 function extractValue(field: any): number {
   if (typeof field === "number" || typeof field === "string") return Number(field)
   if (field?.fields?.value !== undefined) return Number(field.fields.value)

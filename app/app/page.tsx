@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from "react"
-import { fetchPoolData, PoolData, POOL_ID, AMM_PACKAGE, fetchAgents, AgentData } from "./chain"
+import { fetchPoolData, PoolData, POOL_ID, AMM_PACKAGE, fetchAgents, AgentData, TOKEN_SCALE } from "./chain"
 
 const STATIC_AGENTS = [
   { name: "MeanRevBot", strategy: "Mean Reversion", pnl: 8.97, trades: 5, wins: 3 },
@@ -56,25 +56,37 @@ const ROUNDS = [
   { round: 5, price: 1.1678, mom: 6.1, mr: 9.0, mm: 8.4 },
 ]
 
-function formatBig(n: number): string {
-  if (n >= 1e18) return (n / 1e18).toFixed(2)
-  if (n >= 1e15) return (n / 1e15).toFixed(2)
-  if (n >= 1e12) return (n / 1e12).toFixed(2)
-  if (n >= 1e9) return (n / 1e9).toFixed(2)
-  return n.toLocaleString()
+/** Format raw token amount (9 decimals) into human-readable string */
+function formatTokens(raw: number): string {
+  const tokens = raw / TOKEN_SCALE
+  if (tokens >= 1e9) return (tokens / 1e9).toFixed(2)
+  if (tokens >= 1e6) return (tokens / 1e6).toFixed(2)
+  if (tokens >= 1e3) return (tokens / 1e3).toFixed(1)
+  return tokens.toFixed(2)
 }
 
-function formatBigUnit(n: number): string {
-  if (n >= 1e18) return "B"
-  if (n >= 1e15) return "M"
-  if (n >= 1e12) return "K"
+function formatTokensUnit(raw: number): string {
+  const tokens = raw / TOKEN_SCALE
+  if (tokens >= 1e9) return "B"
+  if (tokens >= 1e6) return "M"
+  if (tokens >= 1e3) return "K"
   return ""
 }
 
-function barHeight(price: number): number {
-  const min = 1.0
-  const max = 1.2
-  return Math.max(10, Math.min(100, ((price - min) / (max - min)) * 100))
+/** Format portfolio value for leaderboard display */
+function formatPortfolio(raw: number): string {
+  const tokens = raw / TOKEN_SCALE
+  if (tokens >= 1e9) return (tokens / 1e9).toFixed(2) + "B"
+  if (tokens >= 1e6) return (tokens / 1e6).toFixed(2) + "M"
+  if (tokens >= 1e3) return (tokens / 1e3).toFixed(1) + "K"
+  return tokens.toFixed(2)
+}
+
+function barHeight(price: number, allPrices: number[]): number {
+  // Zero-based proportional bars: tallest bar = 95%, others scale linearly from 0
+  const maxPrice = Math.max(...allPrices)
+  if (maxPrice === 0) return 10
+  return Math.max(10, (price / maxPrice) * 95)
 }
 
 function pnlClass(pnl: number): string {
@@ -88,6 +100,13 @@ function pnlPrefix(pnl: number): string {
 }
 
 const SECTION_IDS = ["architecture", "bugs", "leaderboard", "rounds", "pool"]
+const SECTION_LABELS: Record<string, string> = {
+  architecture: "Architecture",
+  bugs: "Bugs",
+  leaderboard: "Leaderboard",
+  rounds: "Simulation",
+  pool: "Pool",
+}
 
 export default function Home() {
   const [pool, setPool] = useState<PoolData | null>(null)
@@ -136,19 +155,29 @@ export default function Home() {
   // Use live data only if majority of agents have trades
   const liveHasActivity = liveAgents.filter((a) => a.trades > 0).length >= 2
   const useLive = agentsLive && liveHasActivity
+  const poolPrice = pool?.price || 1
 
   const agents = useLive
     ? liveAgents
-        .map((a) => ({
-          name: a.name,
-          strategy: a.strategy,
-          pnl: a.initial_value > 0 ? (a.pnl / a.initial_value) * 100 : 0,
-          trades: a.trades,
-          wins: a.wins,
-        }))
-        .sort((a, b) => b.pnl - a.pnl)
-    : STATIC_AGENTS
+        .map((a) => {
+          // Compute portfolio value in Y-terms using live pool price
+          const portfolioRaw = a.balance_x * poolPrice + a.balance_y
+          const pnlPct = a.initial_value > 0
+            ? ((portfolioRaw - a.initial_value) / a.initial_value) * 100
+            : 0
+          return {
+            name: a.name,
+            strategy: a.strategy,
+            pnl: pnlPct,
+            portfolioValue: portfolioRaw,
+            trades: a.trades,
+            wins: a.wins,
+          }
+        })
+        .sort((a, b) => b.portfolioValue - a.portfolioValue)
+    : STATIC_AGENTS.map((a) => ({ ...a, portfolioValue: 0 }))
 
+  const allWinsZero = agents.every((a) => a.wins === 0)
   const first = agents[0]
   const rest = agents.slice(1)
 
@@ -164,7 +193,7 @@ export default function Home() {
               href={`#${id}`}
               className={`nav__link${activeSection === id ? " nav__link--active" : ""}`}
             >
-              {id.charAt(0).toUpperCase() + id.slice(1)}
+              {SECTION_LABELS[id] || id}
             </a>
           ))}
         </div>
@@ -179,9 +208,9 @@ export default function Home() {
                 Agent<br />Colosseum
               </h1>
               <p className="hero__desc">
-                AI agents compete by trading on a constant-product AMM deployed on
-                OneChain. We audited the official SDK, found 4 bugs, fixed them,
-                built the DEX, and put AI agents on it.
+                AI agents compete by trading COLA/WATER tokens on a constant-product
+                AMM deployed on OneChain. We audited the official SDK, found 4 bugs,
+                fixed them, built the DEX, and put AI agents on it.
               </p>
               <p className="hero__tags">
                 Move &middot; TypeScript &middot; 39 Tests &middot; Sui Fork
@@ -198,15 +227,17 @@ export default function Home() {
             <div className="hero__stats">
               <div className="hero__stat">
                 <div className="hero__stat-number tabular">4</div>
-                <div className="hero__stat-label">bugs fixed</div>
+                <div className="hero__stat-label">Bugs Fixed</div>
               </div>
+              <div className="hero__stat-divider" />
               <div className="hero__stat">
                 <div className="hero__stat-number tabular">3</div>
-                <div className="hero__stat-label">AI agents</div>
+                <div className="hero__stat-label">AI Agents</div>
               </div>
+              <div className="hero__stat-divider" />
               <div className="hero__stat">
                 <div className="hero__stat-number tabular">39</div>
-                <div className="hero__stat-label">tests passing</div>
+                <div className="hero__stat-label">Tests</div>
               </div>
             </div>
           </div>
@@ -299,23 +330,36 @@ export default function Home() {
             ) : (
               <span className="pulse-label">Demo</span>
             )}
+            {lastUpdated && (
+              <span className="section-marker__timestamp">
+                {lastUpdated.toLocaleTimeString()}
+              </span>
+            )}
           </div>
-          {lastUpdated && (
-            <p style={{ fontSize: "0.75rem", color: "var(--color-text-secondary, #666)", marginTop: "0.25rem" }}>
-              Last updated: {lastUpdated.toLocaleTimeString()}
-            </p>
-          )}
 
           {/* #1 */}
           <article className="leader-first">
-            <h3 className="leader-first__name">{first.name}</h3>
-            <div className={`leader-first__pnl ${pnlClass(first.pnl)}`}>
-              {pnlPrefix(first.pnl)}{first.pnl.toFixed(2)}%
+            <div className="leader-first__header">
+              <h3 className="leader-first__name">{first.name}</h3>
+              <span className="leader-first__strategy-tag">{first.strategy}</span>
             </div>
+            {useLive && first.trades > 0 ? (
+              <div className="leader-first__value tabular">
+                {formatPortfolio(first.portfolioValue)}
+                <span className="leader-first__value-label">portfolio</span>
+              </div>
+            ) : useLive && first.trades === 0 ? (
+              <div className="leader-first__pnl" style={{ color: "var(--text-tertiary)" }}>
+                No trades yet
+              </div>
+            ) : (
+              <div className={`leader-first__pnl ${pnlClass(first.pnl)}`}>
+                {pnlPrefix(first.pnl)}{first.pnl.toFixed(2)}%
+              </div>
+            )}
             <p className="leader-first__meta">
-              {first.trades} trades &middot; {first.wins} wins
+              {first.trades} trades{!allWinsZero && <> &middot; {first.wins} wins</>}
             </p>
-            <p className="leader-first__strategy">{first.strategy}</p>
           </article>
 
           {/* #2 and #3 */}
@@ -323,36 +367,50 @@ export default function Home() {
             {rest.map((agent, i) => (
               <article className="leader-card" key={agent.name}>
                 <div className="leader-card__rank">#{i + 2}</div>
-                <h3 className="leader-card__name">{agent.name}</h3>
-                <div className={`leader-card__pnl ${pnlClass(agent.pnl)}`}>
-                  {pnlPrefix(agent.pnl)}{agent.pnl.toFixed(2)}%
+                <div className="leader-card__header">
+                  <h3 className="leader-card__name">{agent.name}</h3>
+                  <span className="leader-card__strategy-tag">{agent.strategy}</span>
                 </div>
+                {useLive && agent.trades > 0 ? (
+                  <div className="leader-card__value tabular">
+                    {formatPortfolio(agent.portfolioValue)}
+                  </div>
+                ) : useLive && agent.trades === 0 ? (
+                  <div className="leader-card__pnl" style={{ color: "var(--text-tertiary)" }}>
+                    No trades yet
+                  </div>
+                ) : (
+                  <div className={`leader-card__pnl ${pnlClass(agent.pnl)}`}>
+                    {pnlPrefix(agent.pnl)}{agent.pnl.toFixed(2)}%
+                  </div>
+                )}
                 <p className="leader-card__meta">
-                  {agent.trades} trades &middot; {agent.wins} wins
+                  {agent.trades} trades{!allWinsZero && <> &middot; {agent.wins} wins</>}
                 </p>
-                <p className="leader-card__strategy">{agent.strategy}</p>
               </article>
             ))}
           </div>
         </section>
 
         {/* ======== Rounds (bar chart) ======== */}
-        <section id="rounds" className="rounds container" aria-label="Round history">
+        <section id="rounds" className="rounds container" aria-label="Simulation results">
           <div className="section-marker">
             <span className="section-marker__bar" />
-            <span className="section-marker__text">Rounds</span>
+            <span className="section-marker__text">Simulation</span>
+            <span className="pulse-label">Pre-competition dry run</span>
           </div>
 
           <div className="chart-bars">
             {ROUNDS.map((r, i) => {
               const prevPrice = i > 0 ? ROUNDS[i - 1].price : r.price
               const direction = r.price >= prevPrice ? "up" : "down"
+              const allPrices = ROUNDS.map((x) => x.price)
               return (
                 <div className="chart-bar-group" key={r.round}>
                   <span className="chart-price">{r.price.toFixed(4)}</span>
                   <div
                     className={`chart-bar chart-bar--${direction}`}
-                    style={{ height: `${barHeight(r.price)}%` }}
+                    style={{ height: `${barHeight(r.price, allPrices)}%` }}
                   />
                   <span className="chart-round-label">R{r.round}</span>
                 </div>
@@ -405,22 +463,22 @@ export default function Home() {
               <>
                 <div>
                   <div className="pool__stat-value tabular">
-                    {formatBig(pool.reserve_x)}
-                    <span className="pool__stat-unit">{formatBigUnit(pool.reserve_x)}</span>
+                    {formatTokens(pool.reserve_x)}
+                    <span className="pool__stat-unit">{formatTokensUnit(pool.reserve_x)} COLA</span>
                   </div>
-                  <div className="pool__stat-label">Reserve X (COLA)</div>
+                  <div className="pool__stat-label">Reserve X</div>
                 </div>
                 <div>
                   <div className="pool__stat-value tabular">
-                    {formatBig(pool.reserve_y)}
-                    <span className="pool__stat-unit">{formatBigUnit(pool.reserve_y)}</span>
+                    {formatTokens(pool.reserve_y)}
+                    <span className="pool__stat-unit">{formatTokensUnit(pool.reserve_y)} WATER</span>
                   </div>
-                  <div className="pool__stat-label">Reserve Y (WATER)</div>
+                  <div className="pool__stat-label">Reserve Y</div>
                 </div>
                 <div>
                   <div className="pool__stat-value tabular">
-                    {formatBig(pool.lp_supply)}
-                    <span className="pool__stat-unit">{formatBigUnit(pool.lp_supply)}</span>
+                    {formatTokens(pool.lp_supply)}
+                    <span className="pool__stat-unit">{formatTokensUnit(pool.lp_supply)} LP</span>
                   </div>
                   <div className="pool__stat-label">LP Supply</div>
                 </div>
